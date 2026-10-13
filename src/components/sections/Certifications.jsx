@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Award, CheckCircle, ExternalLink, FileText, ShieldCheck } from 'lucide-react';
+import { Award, CheckCircle, ExternalLink } from 'lucide-react';
 import SectionHeading from '../ui/SectionHeading';
 
 const certCards = [
@@ -9,23 +9,20 @@ const certCards = [
     date: 'Nov 2024',
     fileUrl: '/certificates/skillforge-web-development.pdf',
     fileName: 'skillforge-fullstack.pdf',
-    verified: true,
   },
   {
     title: 'SQL (Intermediate) Certificate',
     issuer: 'HackerRank',
-    date: 'Verified Assessment',
+    date: 'HackerRank Skills Certification',
     fileUrl: '/certificates/sql_intermediate_hackerrank.pdf',
     fileName: 'sql_intermediate certificate_hackerrank.pdf',
-    verified: true,
   },
   {
     title: 'Gen AI & Agentic AI Internship Certification',
     issuer: 'BrainOvision Solutions Pvt. Ltd. (AICTE)',
     date: 'Jul 2026',
-    fileUrl: null, // Pending confirmation of certificate document
-    fileName: 'AICTE Certified',
-    verified: true,
+    fileUrl: '/certificates/genai-agentic-ai-internship.pdf',
+    fileName: 'genai-agentic-ai-internship.pdf',
   },
 ];
 
@@ -40,7 +37,7 @@ export default function Certifications() {
           badge="Credentials"
           title="Verified"
           highlight="Certifications"
-          subtitle="Directly matched from the resume and certificates folder on your Desktop."
+          subtitle="Courses and programs I have completed."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -54,14 +51,10 @@ export default function Certifications() {
               className="glass-card rounded-2xl p-7 border border-white/10 hover:border-neon-blue/40 hover:shadow-neon-blue transition-all duration-300 flex flex-col justify-between"
             >
               <div>
-                {/* Header Icon + Verified Badge */}
-                <div className="flex items-center justify-between gap-3 mb-5">
+                {/* Header Icon */}
+                <div className="mb-5">
                   <span className="w-11 h-11 rounded-xl bg-dark-950 border border-neon-blue/30 flex items-center justify-center text-neon-blue shadow-neon-blue">
                     <Award className="w-5 h-5" />
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/30">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Verified</span>
                   </span>
                 </div>
 
