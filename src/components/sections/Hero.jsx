@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { ArrowDownRight, Download, Github, Linkedin, Mail, Phone } from 'lucide-react';
 import { portfolioData } from '../../data/portfolioData';
-import { useMediaQuery, useIsSlowConnection } from '../../hooks/useMediaQuery';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const HeroParticles = lazy(() => import('../three/HeroParticles'));
 
@@ -10,20 +10,16 @@ const TARGET_ROLE_TEXT = 'Generative AI | Agentic AI | ML';
 
 export default function Hero() {
   const { personal } = portfolioData;
-  const videoRef = useRef(null);
   const imgRef = useRef(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTouchDevice = useMediaQuery('(hover: none) and (pointer: coarse)');
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
-  const isSlowConnection = useIsSlowConnection();
 
-  const [hasVideo, setHasVideo] = useState(false);
-  const [isVideoPortrait, setIsVideoPortrait] = useState(true);
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [maxPanY, setMaxPanY] = useState(0);
 
-  // Motion values for smooth cursor tracking (only active when video is NOT present)
+  // Motion values for smooth cursor tracking
   const yMotion = useMotionValue(0);
   const xMotion = useMotionValue(0);
 
@@ -48,9 +44,8 @@ export default function Hero() {
   }, []);
 
   // Map Cursor Y to Photo translateY (top = face, bottom = shoes) + subtle X parallax on desktop
-  // Cursor pan is DISABLED when video is present
   useEffect(() => {
-    if (hasVideo || isTouchDevice) return;
+    if (isTouchDevice) return;
 
     const handleMouseMove = (e) => {
       const winHeight = window.innerHeight;
@@ -65,11 +60,11 @@ export default function Hero() {
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [hasVideo, isTouchDevice, maxPanY, yMotion, xMotion]);
+  }, [isTouchDevice, maxPanY, yMotion, xMotion]);
 
-  // On touch devices, map vertical translation to scroll position (disabled when video is present)
+  // On touch devices, map vertical translation to scroll position
   useEffect(() => {
-    if (hasVideo || !isTouchDevice) return;
+    if (!isTouchDevice) return;
 
     const handleScroll = () => {
       const winHeight = window.innerHeight;
@@ -80,28 +75,7 @@ export default function Hero() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasVideo, isTouchDevice, maxPanY, yMotion]);
-
-  // Check if public/hero.mp4 exists; otherwise keep me.png background
-  useEffect(() => {
-    fetch('/hero.mp4', { method: 'HEAD' })
-      .then((res) => {
-        const contentType = res.headers.get('content-type') || '';
-        if (res.ok && (contentType.includes('video') || contentType.includes('octet-stream') || contentType === '')) {
-          setHasVideo(true);
-        } else {
-          setHasVideo(false);
-        }
-      })
-      .catch(() => setHasVideo(false));
-  }, []);
-
-  // Autoplay video once mounted
-  useEffect(() => {
-    if (hasVideo && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  }, [hasVideo]);
+  }, [isTouchDevice, maxPanY, yMotion]);
 
   // Character-by-character typing of "Generative AI | Agentic AI | ML" once
   useEffect(() => {
@@ -120,19 +94,6 @@ export default function Hero() {
 
     return () => clearInterval(interval);
   }, []);
-
-  const handleVideoMetadata = (e) => {
-    const { videoWidth, videoHeight } = e.currentTarget;
-    if (videoWidth && videoHeight) {
-      setIsVideoPortrait(videoHeight >= videoWidth);
-    }
-  };
-
-  const handleVideoEnded = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  };
 
   // Direct resume download for public/resume.pdf
   const handleDownloadResume = async (e) => {
@@ -161,85 +122,32 @@ export default function Hero() {
     >
       {/* BACKGROUND CONTAINER */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        
-        {hasVideo && !isSlowConnection ? (
-          /* HERO VIDEO BACKGROUND (object-cover, muted, autoplay, playsInline, holds last frame) */
-          <div className="absolute inset-0 w-full h-full">
-            {isVideoPortrait ? (
-              /* Portrait or narrow video: placed on right side, large, left edge faded smoothly */
-              <div className="absolute inset-0 flex items-center justify-end">
-                <div
-                  className="relative w-full h-full lg:w-[58%] xl:w-[52%] 2xl:w-[48%] overflow-hidden"
-                  style={{
-                    WebkitMaskImage:
-                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 20%, black 100%)',
-                    maskImage:
-                      'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 6%, black 20%, black 100%)',
-                  }}
-                >
-                  <video
-                    ref={videoRef}
-                    poster="/me.png"
-                    autoPlay
-                    muted
-                    playsInline
-                    preload="auto"
-                    onLoadedMetadata={handleVideoMetadata}
-                    onEnded={handleVideoEnded}
-                    onError={() => setHasVideo(false)}
-                    className="w-full h-full object-cover object-[75%_top] sm:object-right lg:object-center select-none"
-                  >
-                    <source src="/hero.mp4" type="video/mp4" />
-                  </video>
-                  {/* Left edge blend overlay fallback */}
-                  <div className="hidden lg:block absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-dark-950 via-dark-950/70 to-transparent pointer-events-none" />
-                </div>
-              </div>
-            ) : (
-              /* Landscape or wide video: fills the full screen */
-              <video
-                ref={videoRef}
-                poster="/me.png"
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                onLoadedMetadata={handleVideoMetadata}
-                onEnded={handleVideoEnded}
-                onError={() => setHasVideo(false)}
-                className="w-full h-full object-cover object-center select-none"
-              >
-                <source src="/hero.mp4" type="video/mp4" />
-              </video>
-            )}
-          </div>
-        ) : (
-          /* PHOTO FALLBACK with Spring-Smoothed Cursor Motion */
-          <motion.div
-            style={{
-              y: prefersReducedMotion ? 0 : smoothY,
-              x: prefersReducedMotion || isMobile ? 0 : smoothX,
-            }}
-            className="absolute top-0 -left-[12px] w-[calc(100%+24px)] will-change-transform"
-          >
-            <picture className="w-full h-auto min-h-screen block">
-              <source srcSet="/me.webp" type="image/webp" />
-              <img
-                ref={imgRef}
-                src="/me.png"
-                alt={personal.name}
-                width="1087"
-                height="1446"
-                fetchPriority="high"
-                onLoad={calculatePanDistance}
-                className="w-full h-auto min-h-screen object-cover object-[78%_top] sm:object-right lg:object-[86%_center] block select-none"
-                loading="eager"
-              />
-            </picture>
-          </motion.div>
-        )}
+        {/* Spring-Smoothed Motion Container */}
+        <motion.div
+          style={{
+            y: prefersReducedMotion ? 0 : smoothY,
+            x: prefersReducedMotion || isMobile ? 0 : smoothX,
+          }}
+          className="absolute top-0 -left-[12px] w-[calc(100%+24px)] will-change-transform"
+        >
+          {/* Responsive Picture with WebP and PNG Fallback */}
+          <picture className="w-full h-auto min-h-screen block">
+            <source srcSet="/me.webp" type="image/webp" />
+            <img
+              ref={imgRef}
+              src="/me.png"
+              alt={personal.name}
+              width="1087"
+              height="1446"
+              fetchPriority="high"
+              onLoad={calculatePanDistance}
+              className="w-full h-auto min-h-screen object-cover object-[78%_top] sm:object-right lg:object-[86%_center] block select-none"
+              loading="eager"
+            />
+          </picture>
+        </motion.div>
 
-        {/* SOFT DARK GRADIENT (Behind text only on the left; face and body stay bright) */}
+        {/* SOFT DARK GRADIENT (Behind text only on the far left; face and body stay completely bright) */}
         <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-dark-950/95 via-dark-950/70 via-[25%] to-transparent to-[45%] pointer-events-none z-[1]" />
         <div className="lg:hidden absolute inset-0 bg-gradient-to-b from-dark-950/92 via-dark-950/60 via-[35%] to-transparent to-[65%] pointer-events-none z-[1]" />
 

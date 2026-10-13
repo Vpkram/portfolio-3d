@@ -21,8 +21,7 @@ An ultra-modern, high-performance personal portfolio website built for **Pavan K
 ## ✨ Features
 
 - **Hero Section**:
-  - Full-screen H.264 video (`hero.mp4`) with portrait-adaptive right-side positioning and soft edge blend.
-  - Picture element fallback (`me.webp` / `me.png`) with smooth cursor-following parallax tracking when video is inactive.
+  - Full-width high-resolution photo (`me.webp` with `me.png` fallback) with silky smooth cursor Y vertical movement (top shows face, bottom shows shoes) powered by Framer Motion springs and touch scroll mapping.
   - Interactive 3D neon particle cloud masked to keep face and body bright and clear.
   - Dynamic character-by-character typewriter effect: `Generative AI | Agentic AI | ML`.
   - Direct resume download (`/resume.pdf`).

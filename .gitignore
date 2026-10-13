@@ -28,3 +28,6 @@ Thumbs.db
 
 # Lighthouse audit outputs
 lh*.json
+
+# Video backup (local only, do not deploy)
+video_backup/

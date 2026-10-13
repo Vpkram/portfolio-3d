@@ -11,8 +11,6 @@ export const portfolioData = {
     githubDisplay: 'github.com/Vpkram',
     linkedin: 'https://www.linkedin.com/in/vanama-pavan-kalyan-ram-24a79034b',
     resumeUrl: '/resume.pdf',
-    heroVideoUrl: '/hero.mp4',
-    heroPosterUrl: '/me.png',
     formspreeEndpoint: 'https://formspree.io/f/xppqjvqn',
   },
 
