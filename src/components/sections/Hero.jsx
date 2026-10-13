@@ -10,22 +10,29 @@ const TARGET_ROLE_TEXT = 'Generative AI | Agentic AI | ML';
 
 export default function Hero() {
   const { personal } = portfolioData;
+  const heroRef = useRef(null);
   const imgRef = useRef(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const isTouchDevice = useMediaQuery('(hover: none) and (pointer: coarse)');
+  const isTouchDevice = useMediaQuery('(hover: none), (pointer: coarse)');
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
   const [typedText, setTypedText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [maxPanY, setMaxPanY] = useState(0);
 
-  // Motion values for smooth cursor tracking
+  // Motion values for smooth tracking
   const yMotion = useMotionValue(0);
   const xMotion = useMotionValue(0);
 
   // useSpring provides silky smooth gliding with zero sudden jumps
   const smoothY = useSpring(yMotion, { stiffness: 55, damping: 24, mass: 0.6 });
   const smoothX = useSpring(xMotion, { stiffness: 55, damping: 24, mass: 0.6 });
+
+  // Refs for tracking touch & idle motion on touch devices
+  const isTouchingRef = useRef(false);
+  const lastTouchYRef = useRef(0);
+  const touchDirectionRef = useRef(1); // 1 = moving down (toward shoes), -1 = moving up (toward face)
+  const phaseRef = useRef(0); // Phase in ms [0, 20000] for slow 10s auto-pan loop
 
   // Calculate maximum vertical pan distance so shoes are reached at bottom
   const calculatePanDistance = () => {
@@ -43,7 +50,7 @@ export default function Hero() {
     return () => window.removeEventListener('resize', calculatePanDistance);
   }, []);
 
-  // Map Cursor Y to Photo translateY (top = face, bottom = shoes) + subtle X parallax on desktop
+  // 1. DESKTOP ONLY: Map Cursor Y to Photo translateY (top = face, bottom = shoes) + subtle X parallax
   useEffect(() => {
     if (isTouchDevice) return;
 
@@ -62,20 +69,155 @@ export default function Hero() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isTouchDevice, maxPanY, yMotion, xMotion]);
 
-  // On touch devices, map vertical translation to scroll position
+  // 2. TOUCH DEVICES ONLY: Touch & drag on hero moves photo vertically with finger Y (passive, no scroll blocking)
   useEffect(() => {
     if (!isTouchDevice) return;
 
-    const handleScroll = () => {
-      const winHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-      const progressY = Math.max(0, Math.min(1, scrollY / (winHeight * 0.85)));
-      yMotion.set(-progressY * maxPanY);
+    const heroEl = heroRef.current;
+    if (!heroEl) return;
+
+    const handleTouchStart = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        isTouchingRef.current = true;
+        const touchY = e.touches[0].clientY;
+        lastTouchYRef.current = touchY;
+
+        const winHeight = window.innerHeight;
+        const progressY = Math.max(0, Math.min(1, touchY / winHeight));
+        yMotion.set(-progressY * maxPanY);
+      }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const handleTouchMove = (e) => {
+      if (isTouchingRef.current && e.touches && e.touches.length > 0) {
+        const touchY = e.touches[0].clientY;
+        touchDirectionRef.current = touchY >= lastTouchYRef.current ? 1 : -1;
+        lastTouchYRef.current = touchY;
+
+        const winHeight = window.innerHeight;
+        const progressY = Math.max(0, Math.min(1, touchY / winHeight));
+        yMotion.set(-progressY * maxPanY);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (isTouchingRef.current) {
+        isTouchingRef.current = false;
+        // Synchronize auto-pan phase seamlessly with the release position
+        const currentY = Math.abs(yMotion.get());
+        const currentProgress = maxPanY > 0 ? Math.max(0, Math.min(1, currentY / maxPanY)) : 0;
+
+        // progress = (1 - cos(theta)) / 2 => cos(theta) = 1 - 2 * progress
+        const cosTheta = Math.max(-1, Math.min(1, 1 - 2 * currentProgress));
+        const theta = Math.acos(cosTheta); // [0, PI]
+
+        if (touchDirectionRef.current >= 0) {
+          // Downward towards shoes: phase in [0, 10000]
+          phaseRef.current = (theta / Math.PI) * 10000;
+        } else {
+          // Upward towards face: phase in [10000, 20000]
+          phaseRef.current = 20000 - (theta / Math.PI) * 10000;
+        }
+      }
+    };
+
+    heroEl.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    return () => {
+      heroEl.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+    };
   }, [isTouchDevice, maxPanY, yMotion]);
+
+  // 3. TOUCH DEVICES ONLY: Idle auto-pan from face to shoes and back (~10s each way, ease-in-out)
+  useEffect(() => {
+    if (!isTouchDevice || prefersReducedMotion) return;
+
+    let animId;
+    let lastTime = performance.now();
+
+    const animate = (now) => {
+      const delta = Math.min(now - lastTime, 100);
+      lastTime = now;
+
+      if (!isTouchingRef.current && maxPanY > 0) {
+        phaseRef.current = (phaseRef.current + delta) % 20000;
+        // Ease-in-out curve via cosine
+        const theta = (phaseRef.current * Math.PI) / 10000;
+        const progress = (1 - Math.cos(theta)) / 2;
+        yMotion.set(-progress * maxPanY);
+      }
+
+      animId = requestAnimationFrame(animate);
+    };
+
+    animId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [isTouchDevice, prefersReducedMotion, maxPanY, yMotion]);
+
+  // 4. TOUCH DEVICES ONLY: Phone tilt horizontal shift (DeviceOrientation)
+  useEffect(() => {
+    if (!isTouchDevice) return;
+
+    const handleOrientation = (e) => {
+      if (e.gamma !== null && e.gamma !== undefined) {
+        // gamma: left-to-right tilt degrees [-90, 90]
+        const clampedGamma = Math.max(-25, Math.min(25, e.gamma));
+        xMotion.set((clampedGamma / 25) * 12);
+      }
+    };
+
+    let permissionRequested = false;
+
+    const requestOrientation = () => {
+      if (permissionRequested) return;
+      if (
+        typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function'
+      ) {
+        permissionRequested = true;
+        DeviceOrientationEvent.requestPermission()
+          .then((state) => {
+            if (state === 'granted') {
+              window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+            }
+          })
+          .catch(() => {
+            // Silently skip if denied or not permitted
+          });
+      }
+    };
+
+    // Standard Android / non-iOS browsers:
+    if (
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission !== 'function'
+    ) {
+      window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+    } else if (
+      typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function'
+    ) {
+      // iOS: request permission after user tap
+      const handleUserTap = () => {
+        requestOrientation();
+      };
+      window.addEventListener('touchend', handleUserTap, { passive: true, once: true });
+      window.addEventListener('click', handleUserTap, { passive: true, once: true });
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, [isTouchDevice, xMotion]);
 
   // Character-by-character typing of "Generative AI | Agentic AI | ML" once
   useEffect(() => {
@@ -118,6 +260,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
+      ref={heroRef}
       className="relative min-h-screen w-full flex items-center overflow-hidden bg-dark-950"
     >
       {/* BACKGROUND CONTAINER */}
@@ -126,9 +269,9 @@ export default function Hero() {
         <motion.div
           style={{
             y: prefersReducedMotion ? 0 : smoothY,
-            x: prefersReducedMotion || isMobile ? 0 : smoothX,
+            x: prefersReducedMotion ? 0 : smoothX,
           }}
-          className="absolute top-0 -left-[12px] w-[calc(100%+24px)] will-change-transform"
+          className="absolute top-0 -left-[16px] w-[calc(100%+32px)] will-change-transform"
         >
           {/* Responsive Picture with WebP and PNG Fallback */}
           <picture className="w-full h-auto min-h-screen block">
