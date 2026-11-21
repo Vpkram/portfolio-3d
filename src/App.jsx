@@ -1,3 +1,4 @@
+import { useState, lazy, Suspense } from 'react';
 import CursorGlow from './components/layout/CursorGlow';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -11,9 +12,35 @@ import Certifications from './components/sections/Certifications';
 import Volunteering from './components/sections/Volunteering';
 import Contact from './components/sections/Contact';
 
+// Lazy-load cinematic intro so initial page load is fast
+const CinematicIntro = lazy(() => import('./components/intro/CinematicIntro'));
+
+function checkShouldShowIntro() {
+  try {
+    if (typeof window === 'undefined') return false;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return false;
+    }
+    return !sessionStorage.getItem('cinematic_intro_seen');
+  } catch {
+    return false;
+  }
+}
+
 export default function App() {
+  const [showIntro, setShowIntro] = useState(checkShouldShowIntro);
+
+  const handleIntroComplete = () => {
+    setShowIntro(false);
+  };
+
   return (
     <div className="relative min-h-screen bg-dark-950 text-slate-100 selection:bg-neon-blue/30 selection:text-neon-blue">
+      {showIntro && (
+        <Suspense fallback={null}>
+          <CinematicIntro onComplete={handleIntroComplete} />
+        </Suspense>
+      )}
       <CursorGlow />
       <Navbar />
       <main>
