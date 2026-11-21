@@ -137,7 +137,7 @@ export const portfolioData = {
     {
       title: 'SQL (Intermediate)',
       issuer: 'HackerRank',
-      date: 'HackerRank Skills Certification',
+      date: '',
     },
   ],
 

@@ -23,7 +23,7 @@ export default function About() {
           badge="About Me"
           title="Engineering Autonomous"
           highlight="AI Systems"
-          subtitle="Real academic credentials and verified hands-on engineering from resume details."
+          subtitle="Machine learning and agentic AI, built from real projects and datasets."
         />
 
         {/* Glassmorphic About Card */}

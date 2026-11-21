@@ -18,7 +18,7 @@ export default function Education() {
           badge="Academic Background"
           title="Education &amp;"
           highlight="Qualifications"
-          subtitle="Strong academic track record verified directly from educational certificates and resume."
+          subtitle="My academic journey so far."
         />
 
         <div className="max-w-4xl mx-auto space-y-8">

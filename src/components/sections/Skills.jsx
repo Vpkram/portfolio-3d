@@ -32,13 +32,19 @@ export default function Skills() {
           badge="Technical Skills"
           title="Core Capabilities &amp;"
           highlight="Tooling"
-          subtitle="All technologies and frameworks verified from resume experience and projects."
+          subtitle="The languages, frameworks and tools I work with."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           {skills.map((group, idx) => {
             const Icon = categoryIcons[group.category] || Cpu;
             const accentClasses = categoryAccents[group.category] || 'border-neon-blue/30 text-neon-blue';
+            const layoutClasses =
+              idx === 3
+                ? 'col-span-1 md:col-span-1 lg:col-span-2 lg:col-start-2'
+                : idx === 4
+                ? 'col-span-1 md:col-span-2 md:max-w-md md:w-full md:mx-auto lg:max-w-none lg:mx-0 lg:col-span-2'
+                : 'col-span-1 md:col-span-1 lg:col-span-2';
 
             return (
               <motion.div
@@ -47,7 +53,7 @@ export default function Skills() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
                 transition={{ duration: 0.5, delay: idx * 0.08 }}
-                className="glass-card rounded-2xl p-6 sm:p-7 border border-white/10 hover:border-neon-blue/40 hover:shadow-neon-blue transition-all duration-300 flex flex-col justify-between"
+                className={`glass-card rounded-2xl p-6 sm:p-7 border border-white/10 hover:border-neon-blue/40 hover:shadow-neon-blue transition-all duration-300 flex flex-col justify-between ${layoutClasses}`}
               >
                 <div>
                   {/* Category Header */}
@@ -75,7 +81,6 @@ export default function Skills() {
 
                 <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
                   <span>{group.items.length} Skills</span>
-                  <span className="text-neon-cyan">Verified</span>
                 </div>
               </motion.div>
             );

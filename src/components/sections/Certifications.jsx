@@ -13,7 +13,7 @@ const certCards = [
   {
     title: 'SQL (Intermediate) Certificate',
     issuer: 'HackerRank',
-    date: 'HackerRank Skills Certification',
+    date: null,
     fileUrl: '/certificates/sql_intermediate_hackerrank.pdf',
     fileName: 'sql_intermediate certificate_hackerrank.pdf',
   },
@@ -35,7 +35,7 @@ export default function Certifications() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <SectionHeading
           badge="Credentials"
-          title="Verified"
+          title="Earned"
           highlight="Certifications"
           subtitle="Courses and programs I have completed."
         />
@@ -66,9 +66,13 @@ export default function Certifications() {
                   {cert.issuer}
                 </p>
 
-                <p className="text-xs font-mono text-slate-400 mb-6">
-                  Issued: {cert.date}
-                </p>
+                {cert.date ? (
+                  <p className="text-xs font-mono text-slate-400 mb-6">
+                    Issued: {cert.date}
+                  </p>
+                ) : (
+                  <p className="text-xs font-mono text-slate-400 mb-6">&nbsp;</p>
+                )}
               </div>
 
               {/* Action Button: View Certificate */}
@@ -86,7 +90,7 @@ export default function Certifications() {
                 ) : (
                   <div className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono text-slate-400 bg-white/5 border border-white/10">
                     <CheckCircle className="w-3.5 h-3.5 text-neon-cyan" />
-                    <span>Resume Verified (AICTE)</span>
+                    <span>AICTE Certified</span>
                   </div>
                 )}
               </div>
