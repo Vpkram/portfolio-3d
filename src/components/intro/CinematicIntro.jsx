@@ -122,7 +122,8 @@ export default function CinematicIntro({ scrollYProgress }) {
   const [pointerEvents, setPointerEvents] = useState('auto');
   const [isVisible, setIsVisible] = useState(true);
 
-  // Parallax motion values (desktop)
+  // Requirement 2: Parallax offsets must start at exactly 0 and only change after the mouse moves.
+  const [hasMouseMoved, setHasMouseMoved] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -130,18 +131,18 @@ export default function CinematicIntro({ scrollYProgress }) {
   const smoothMouseX = useSpring(mouseX, springConfig);
   const smoothMouseY = useSpring(mouseY, springConfig);
 
-  // Requirement 4: Real motion on "RAM"
-  // Cursor parallax in opposite direction of cursor (up to 25px horizontal, 12px vertical)
-  const wordParallaxX = useTransform(smoothMouseX, [-1, 1], [25, -25]);
-  const wordParallaxY = useTransform(smoothMouseY, [-1, 1], [12, -12]);
+  // Parallax offsets start at 0, opposite direction of cursor for RAM
+  const wordParallaxX = useTransform(smoothMouseX, (v) => (hasMouseMoved ? v * -25 : 0));
+  const wordParallaxY = useTransform(smoothMouseY, (v) => (hasMouseMoved ? v * -12 : 0));
 
-  // Requirement 4: Body moves 6px with cursor in opposite direction from letters (to give depth)
-  const bodyParallaxX = useTransform(smoothMouseX, [-1, 1], [-6, 6]);
-  const bodyParallaxY = useTransform(smoothMouseY, [-1, 1], [-3, 3]);
+  // Body moves at most 6px with cursor opposite to letters for depth
+  const bodyParallaxX = useTransform(smoothMouseX, (v) => (hasMouseMoved ? v * 6 : 0));
+  const bodyParallaxY = useTransform(smoothMouseY, (v) => (hasMouseMoved ? v * 3 : 0));
 
   // Mousemove listener for parallax
   useEffect(() => {
     const handleMouseMove = (e) => {
+      setHasMouseMoved(true);
       const normX = (e.clientX / window.innerWidth - 0.5) * 2;
       const normY = (e.clientY / window.innerHeight - 0.5) * 2;
       mouseX.set(normX);
@@ -176,12 +177,13 @@ export default function CinematicIntro({ scrollYProgress }) {
   });
 
   return (
+    // Requirement 2: ONE container: position relative, width 100%, height 100vh, overflow hidden, display grid, place-items center.
     <div
       style={{
         pointerEvents,
-        display: isVisible ? 'block' : 'none',
+        display: isVisible ? 'grid' : 'none',
       }}
-      className="absolute inset-0 z-10 overflow-hidden select-none"
+      className="relative w-full h-[100vh] overflow-hidden select-none place-items-center z-10"
     >
       {/* Background backdrop element */}
       <motion.div
@@ -192,17 +194,18 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* Drifting Warm Amber/Orange Particles */}
       <IntroParticles isMobile={isMobile} />
 
-      {/* Requirement 3: "WELCOME TO MY WORLD" at about 14% from top, above my head,
-          bold white with the dots, never overlapping me */}
+      {/* Requirement 3: "WELCOME TO MY WORLD": horizontal center at 50% (within 4px), about 12% from the top, above my head.
+          Stacked as absolute child with left:0; right:0; margin-inline:auto; text-align:center. */}
       <motion.div
+        id="intro-welcome"
         style={{ opacity: scrollUiOpacity }}
-        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.35, duration: 0.8, ease: 'easeOut' }}
-        className="absolute top-[14%] left-1/2 -translate-x-1/2 z-30 pointer-events-none text-center px-4"
+        className="absolute top-[12%] left-0 right-0 mx-auto w-fit text-center z-30 pointer-events-none px-4"
       >
         <p
-          className="font-bold text-white text-[1.1rem] tracking-[0.35em] uppercase flex items-center justify-center gap-3 select-none whitespace-nowrap"
+          className="font-bold text-white text-[1.1rem] uppercase flex items-center justify-center gap-3 select-none whitespace-nowrap"
           style={{ fontWeight: 700, letterSpacing: '0.35em', fontSize: '1.1rem' }}
         >
           <span className="opacity-60 text-[0.8em] tracking-[0.25em]">• • •</span>
@@ -211,12 +214,12 @@ export default function CinematicIntro({ scrollYProgress }) {
         </p>
       </motion.div>
 
-      {/* Small Corner Labels */}
+      {/* Small Corner Labels: Top Left, Bottom Left, Bottom Right */}
       {/* Top Left: ML ENGINEER */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
-        initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.45, duration: 0.6 }}
         className="absolute top-6 left-6 sm:top-8 sm:left-8 z-30 pointer-events-none flex items-center gap-2"
       >
@@ -229,8 +232,8 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* Bottom Left: GEN AI */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
-        initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.6 }}
         className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 z-30 pointer-events-none"
       >
@@ -242,8 +245,8 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* Bottom Right: AGENTIC SYSTEMS */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
-        initial={prefersReducedMotion ? false : { opacity: 0, x: 12 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.55, duration: 0.6 }}
         className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 pointer-events-none"
       >
@@ -252,47 +255,38 @@ export default function CinematicIntro({ scrollYProgress }) {
         </span>
       </motion.div>
 
-      {/* Requirement 3 & 4: "RAM" about 55% of viewport height, tight letters, centered at 50% width and about 56% down the screen.
-          Real motion: visible horizontal drift 30px back and forth over 10s, cursor parallax up to 25px/12px opposite cursor,
-          light sweep every 4s, letters never change size (z-10, behind body). */}
+      {/* Requirement 3: "RAM": one element, tight letters (letter-spacing -0.02em),
+          bounding box centered horizontally at 50% of viewport width (within 4px),
+          about 55% of viewport height tall, with its vertical center at about 55% of viewport height.
+          Fully visible, no cropping at bottom.
+          Stacked as absolute child with left:0; right:0; margin-inline:auto; text-align:center. */}
       <motion.div
+        id="intro-ram-wrapper"
         style={{
           x: wordParallaxX,
           y: wordParallaxY,
           scale: scrollWordScale,
           opacity: scrollWordOpacity,
           filter: wordFilter,
+          top: '27.5vh',
         }}
-        className="absolute top-[56%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none flex items-center justify-center"
+        className="absolute left-0 right-0 mx-auto w-fit text-center z-10 pointer-events-none select-none flex items-center justify-center h-[55vh]"
       >
-        {/* Horizontal drift of 30px back and forth over 10 seconds */}
-        <motion.div
-          animate={
-            prefersReducedMotion
-              ? false
-              : {
-                  x: [-30, 30, -30],
-                }
-          }
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          className="relative inline-flex items-center justify-center select-none"
-        >
+        <div className="relative inline-flex items-center justify-center select-none h-full">
           {/* Soft orange radial ambient glow behind RAM */}
           <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
-            <div className="w-[85vw] h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
+            <div className="w-[70vw] h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
           </div>
 
-          {/* Single "RAM" text element: about 55% viewport height, tight letters (-0.025em), orange gradient */}
+          {/* Single "RAM" text element: about 55% viewport height tall, tight letters (-0.02em) */}
           <span
-            className="inline-block font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-[0.82]"
+            id="intro-ram"
+            className="inline-block font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-none"
             style={{
               fontFamily: "'Anton', sans-serif",
-              fontSize: 'clamp(6rem, 28vw, 55vh)',
-              letterSpacing: '-0.025em',
+              fontSize: '55vh',
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
               display: 'inline-block',
             }}
           >
@@ -318,14 +312,14 @@ export default function CinematicIntro({ scrollYProgress }) {
             }}
             className="absolute inset-y-0 w-2/5 bg-gradient-to-r from-transparent via-amber-200/85 to-transparent skew-x-[-22deg] pointer-events-none mix-blend-overlay"
           />
-        </motion.div>
+        </div>
       </motion.div>
 
-      {/* Requirement 2 & 3: Transparent walking video (intro-walk-alpha.webm), normal opaque-where-visible video,
-          NO mix-blend-mode and NO mask. Solid body in front of RAM (z-20).
-          Layout: body about 72% viewport height, feet at bottom edge, head about 28% from top, centered at 50%.
-          Parallax: moves 6px with cursor in opposite direction from letters. */}
+      {/* Requirement 3: The walking video: horizontal center at 50% (within 4px),
+          feet at the bottom edge, about 80% of the viewport height, in front of "RAM".
+          Stacked as absolute child with left:0; right:0; margin-inline:auto; text-align:center. */}
       <motion.div
+        id="intro-video-wrapper"
         style={{
           x: bodyParallaxX,
           y: bodyParallaxY,
@@ -333,7 +327,7 @@ export default function CinematicIntro({ scrollYProgress }) {
           opacity: scrollCutoutOpacity,
           transformOrigin: 'bottom center',
         }}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-end h-[72vh] max-h-[72vh] pointer-events-none"
+        className="absolute bottom-0 left-0 right-0 mx-auto w-fit z-20 flex flex-col items-center justify-end h-[80vh] max-h-[80vh] pointer-events-none"
       >
         {/* Transparent WebM Video (NO mix-blend-mode, NO mask) */}
         {shouldPlayVideo && (
@@ -368,29 +362,32 @@ export default function CinematicIntro({ scrollYProgress }) {
         )}
       </motion.div>
 
-      {/* Animated SCROLL indicator at bottom center (z-30) */}
-      <motion.div
-        style={{ opacity: scrollUiOpacity }}
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center gap-1.5"
-      >
-        <span className="font-mono text-[10px] sm:text-xs tracking-[0.3em] text-amber-400/90 font-medium uppercase drop-shadow-[0_0_10px_rgba(255,174,0,0.5)]">
-          SCROLL
-        </span>
+      {/* Requirement 3: SCROLL indicator must not overlap feet (hide it while walking) */}
+      {(!shouldPlayVideo || !isVideoReady) && (
         <motion.div
-          animate={{ y: [0, 5, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-5 h-8 rounded-full border border-orange-500/50 flex items-start justify-center p-1 bg-orange-950/20 backdrop-blur-sm shadow-[0_0_12px_rgba(255,110,0,0.3)]"
+          id="intro-scroll-indicator"
+          style={{ opacity: scrollUiOpacity }}
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className="absolute bottom-4 left-0 right-0 mx-auto w-fit z-30 pointer-events-none flex flex-col items-center gap-1.5"
         >
+          <span className="font-mono text-[10px] sm:text-xs tracking-[0.3em] text-amber-400/90 font-medium uppercase drop-shadow-[0_0_10px_rgba(255,174,0,0.5)]">
+            SCROLL
+          </span>
           <motion.div
-            animate={{ y: [0, 10, 0], opacity: [0.3, 1, 0.3] }}
+            animate={{ y: [0, 5, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-1.5 h-1.5 rounded-full bg-[#FF8A00] shadow-[0_0_6px_#FF8A00]"
-          />
+            className="w-5 h-8 rounded-full border border-orange-500/50 flex items-start justify-center p-1 bg-orange-950/20 backdrop-blur-sm shadow-[0_0_12px_rgba(255,110,0,0.3)]"
+          >
+            <motion.div
+              animate={{ y: [0, 10, 0], opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-1.5 h-1.5 rounded-full bg-[#FF8A00] shadow-[0_0_6px_#FF8A00]"
+            />
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </div>
   );
 }
