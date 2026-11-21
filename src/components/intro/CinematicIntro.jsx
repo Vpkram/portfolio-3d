@@ -3,7 +3,7 @@ import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent } 
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import '@fontsource/anton';
 
-// Warm amber & orange drifting particles (Requirement 7 & 9)
+// Warm amber & orange drifting particles (Requirement 4)
 function IntroParticles({ isMobile }) {
   const canvasRef = useRef(null);
 
@@ -79,26 +79,34 @@ export default function CinematicIntro({ scrollYProgress }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
-  // Requirement 7: Video hook for public/intro-walk.mp4
-  const [hasVideo, setHasVideo] = useState(false);
+  // Requirement 5: Detect slow mobile connections
+  const [isSlowConn, setIsSlowConn] = useState(false);
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && navigator.connection) {
+      const conn = navigator.connection;
+      if (conn.saveData || ['slow-2g', '2g', '3g'].includes(conn.effectiveType)) {
+        setIsSlowConn(true);
+      }
+    }
+  }, []);
+
+  // Video playback readiness & element ref
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const videoRef = useRef(null);
+
+  const shouldPlayVideo = !prefersReducedMotion && !isSlowConn;
+
+  // Auto-play the walking video
+  useEffect(() => {
+    if (shouldPlayVideo && videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [shouldPlayVideo]);
+
   const [pointerEvents, setPointerEvents] = useState('auto');
   const [isVisible, setIsVisible] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
-    fetch('/intro-walk.mp4', { method: 'HEAD' })
-      .then((res) => {
-        if (isMounted && res.ok && res.headers.get('content-type')?.includes('video')) {
-          setHasVideo(true);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Parallax motion values (desktop)
+  // Parallax motion values (desktop) - Requirement 3: on "RAM" only
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -106,14 +114,9 @@ export default function CinematicIntro({ scrollYProgress }) {
   const smoothMouseX = useSpring(mouseX, springConfig);
   const smoothMouseY = useSpring(mouseY, springConfig);
 
-  // Parallax mapping:
-  // Requirement 2: The cursor parallax moves me at most 6px
-  const cutoutParallaxX = useTransform(smoothMouseX, [-1, 1], [-6, 6]);
-  const cutoutParallaxY = useTransform(smoothMouseY, [-1, 1], [-4, 4]);
-
-  // Subtle word parallax
-  const wordParallaxX = useTransform(smoothMouseX, [-1, 1], [10, -10]);
-  const wordParallaxY = useTransform(smoothMouseY, [-1, 1], [6, -6]);
+  // Requirement 3: Cursor parallax shifts "RAM" slightly opposite to cursor
+  const wordParallaxX = useTransform(smoothMouseX, [-1, 1], [14, -14]);
+  const wordParallaxY = useTransform(smoothMouseY, [-1, 1], [8, -8]);
 
   // Mousemove listener for parallax
   useEffect(() => {
@@ -128,11 +131,11 @@ export default function CinematicIntro({ scrollYProgress }) {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [mouseX, mouseY]);
 
-  // Scrubbed Scroll Transforms (scrubbed to scroll position over first 100vh)
+  // Scrubbed Scroll Transforms (Requirement 4: video scales up and fades as user scrolls)
   // Background opacity: 1 -> 0
   const bgOpacity = useTransform(scrollYProgress, [0, 0.75, 1], [1, 0.25, 0]);
 
-  // Cutout: scales up to about 1.35 and fades out on scroll
+  // Video / Cutout: scales up to about 1.35 and fades out on scroll
   const scrollCutoutScale = useTransform(scrollYProgress, [0, 1], [1, 1.35]);
   const scrollCutoutOpacity = useTransform(scrollYProgress, [0, 0.6, 0.9], [1, 0.65, 0]);
 
@@ -154,7 +157,6 @@ export default function CinematicIntro({ scrollYProgress }) {
     setIsVisible(v < 0.999);
   });
 
-  // Requirement 4: Letters for RAM
   const letters = ['R', 'A', 'M'];
 
   return (
@@ -169,7 +171,7 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* Drifting Warm Amber/Orange Particles */}
       <IntroParticles isMobile={isMobile} />
 
-      {/* Requirement 6: "WELCOME TO MY WORLD" at ~12% from top with z-index above cutout (z-30) */}
+      {/* Requirement 3: "WELCOME TO MY WORLD" above everything (z-30) at ~12% from top */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
@@ -182,7 +184,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         </p>
       </motion.div>
 
-      {/* Requirement 7: Small Corner Labels */}
+      {/* Requirement 4: Small Corner Labels */}
       {/* Top Left: ML ENGINEER */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
@@ -223,8 +225,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         </span>
       </motion.div>
 
-      {/* Requirement 4 & 5: Big word "RAM" much wider (~85vw), Anton font, orange gradient, ~55vh height,
-          centered on torso behind cutout (z-10), constant motion drift 20px over 8s, light sweep every 4s, never changes size */}
+      {/* Requirement 3: "RAM" BEHIND the video (z-10), with cursor parallax on "RAM" only */}
       <motion.div
         style={{
           x: wordParallaxX,
@@ -235,7 +236,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         }}
         className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
       >
-        {/* Horizontal drift of about 20px back and forth over 8 seconds */}
+        {/* Horizontal drift of about 20px back and forth over 8 seconds (never changes size) */}
         <motion.div
           animate={
             prefersReducedMotion
@@ -256,7 +257,7 @@ export default function CinematicIntro({ scrollYProgress }) {
             <div className="w-[85vw] h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
           </div>
 
-          {/* Letter container spanning ~85% of viewport width, all letters same size */}
+          {/* Letter container spanning ~85% of viewport width in Anton font */}
           <div
             className="w-full flex items-center justify-between font-anton uppercase select-none overflow-hidden"
             style={{
@@ -298,104 +299,66 @@ export default function CinematicIntro({ scrollYProgress }) {
         </motion.div>
       </motion.div>
 
-      {/* Requirement 2 & 3: Cutout centered on torso (50% viewport width), constant size (80% viewport height),
-          feet at bottom edge, fade in from feet upward, very slow 3px breathing, soft floor shadow (z-20) */}
-      <motion.div
-        style={{
-          x: cutoutParallaxX,
-          y: cutoutParallaxY,
-        }}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-end h-[80vh] max-h-[80vh] pointer-events-none"
-      >
-        {/* Soft elliptical floor shadow under feet */}
+      {/* Requirement 1, 2, 3: Walking Video centered at 50% width, bottom at screen edge, ~85% viewport height (z-20)
+          No walk-in scale, bounce, sway or tilt (video has real walking).
+          Cursor parallax on RAM only (no parallax on video). */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-end h-[85vh] max-h-[85vh] pointer-events-none">
+        {/* Soft floor shadow under feet */}
         <motion.div
           style={{ opacity: scrollShadowOpacity }}
-          className="absolute -bottom-2 left-1/2 -translate-x-1/2 pointer-events-none z-10"
-        >
-          <motion.div
-            animate={
-              prefersReducedMotion
-                ? false
-                : {
-                    scaleX: [1, 1.03, 1],
-                    opacity: [0.85, 0.75, 0.85],
-                  }
-            }
-            transition={{
-              duration: 4.8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="w-48 sm:w-60 h-5 sm:h-7 rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.85)_0%,_rgba(0,0,0,0.4)_45%,_transparent_75%)]"
-          />
-        </motion.div>
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 pointer-events-none z-10 w-48 sm:w-60 h-5 sm:h-7 rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.85)_0%,_rgba(0,0,0,0.4)_45%,_transparent_75%)]"
+        />
 
-        {/* Scroll scrub wrapper: scales up to ~1.35 and fades on scroll */}
+        {/* Scroll scrub wrapper: video scales up to ~1.35 and fades on scroll */}
         <motion.div
           style={{
             scale: scrollCutoutScale,
             opacity: scrollCutoutOpacity,
             transformOrigin: 'bottom center',
           }}
-          className="h-full flex items-end justify-center z-20"
+          className="relative h-full flex items-end justify-center z-20"
         >
-          {/* Fade in from feet upward at final constant size, with slow 3px breathing motion */}
-          <motion.div
-            initial={
-              prefersReducedMotion
-                ? false
-                : {
-                    clipPath: 'inset(100% 0% 0% 0%)',
-                    opacity: 0,
-                  }
-            }
-            animate={
-              prefersReducedMotion
-                ? { y: 0, opacity: 1, clipPath: 'inset(0% 0% 0% 0%)' }
-                : {
-                    clipPath: 'inset(0% 0% 0% 0%)',
-                    opacity: 1,
-                    y: [0, -3, 0],
-                  }
-            }
-            transition={
-              prefersReducedMotion
-                ? { duration: 0 }
-                : {
-                    clipPath: { duration: 1.0, ease: [0.22, 1, 0.36, 1] },
-                    opacity: { duration: 0.8, ease: 'easeOut' },
-                    y: { duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 1.0 },
-                  }
-            }
-            style={{ transformOrigin: 'bottom center' }}
-            className="h-full flex items-end justify-center"
-          >
-            {hasVideo ? (
-              <video
-                src="/intro-walk.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="h-full w-auto max-w-[95vw] object-contain object-bottom select-none mix-blend-screen"
-                style={{ transform: 'translateX(-2.28%)' }}
-              />
-            ) : (
-              <img
-                src="/me-cutout-trimmed.png"
-                alt="Pavan Kalyan Ram Vanama"
-                width="310"
-                height="894"
-                className="h-full w-auto max-w-[95vw] object-contain object-bottom select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)]"
-                style={{ transform: 'translateX(-2.28%)' }}
-                loading="eager"
-              />
-            )}
-          </motion.div>
-        </motion.div>
-      </motion.div>
+          {/* Requirement 1 & 2: Walking Video with mix-blend-mode: screen + soft radial mask */}
+          {shouldPlayVideo && (
+            <video
+              ref={videoRef}
+              src="/intro-walk.mp4"
+              poster="/me-cutout-trimmed.png"
+              autoPlay
+              loop
+              muted
+              playsInline
+              onLoadedData={() => setIsVideoReady(true)}
+              onPlaying={() => setIsVideoReady(true)}
+              className={`h-full w-auto max-w-[95vw] object-contain object-bottom select-none mix-blend-screen transition-opacity duration-300 ${
+                isVideoReady ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                maskImage: 'radial-gradient(ellipse 75% 85% at 50% 55%, black 45%, transparent 95%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 75% 85% at 50% 55%, black 45%, transparent 95%)',
+              }}
+            />
+          )}
 
-      {/* Requirement 7: Animated SCROLL indicator at bottom center */}
+          {/* Requirement 5: me-cutout-trimmed.png as fallback while video loads,
+              on slow connections, and when prefers-reduced-motion is on */}
+          {(!shouldPlayVideo || !isVideoReady) && (
+            <img
+              src="/me-cutout-trimmed.png"
+              alt="Pavan Kalyan Ram Vanama"
+              width="310"
+              height="894"
+              className={`h-full w-auto max-w-[95vw] object-contain object-bottom select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)] ${
+                shouldPlayVideo && isVideoReady ? 'hidden' : 'block'
+              }`}
+              style={{ transform: 'translateX(-2.28%)' }}
+              loading="eager"
+            />
+          )}
+        </motion.div>
+      </div>
+
+      {/* Requirement 4: Animated SCROLL indicator at bottom center */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0, y: 15 }}
