@@ -21,6 +21,7 @@ export default {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
+        anton: ['Anton', 'sans-serif'],
       },
       boxShadow: {
         'neon-blue': '0 0 25px -5px rgba(0, 240, 255, 0.45)',

@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { motion } from 'framer-motion';
 import CursorGlow from './components/layout/CursorGlow';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -42,7 +43,15 @@ export default function App() {
         </Suspense>
       )}
       <CursorGlow />
-      <Navbar />
+      {/* Hide navbar and resume button until intro ends, then fade them in */}
+      <motion.div
+        initial={showIntro ? { opacity: 0, y: -20 } : false}
+        animate={{ opacity: showIntro ? 0 : 1, y: showIntro ? -20 : 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        style={{ pointerEvents: showIntro ? 'none' : 'auto' }}
+      >
+        <Navbar />
+      </motion.div>
       <main>
         <Hero />
         <About />
