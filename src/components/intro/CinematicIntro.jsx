@@ -79,41 +79,30 @@ export default function CinematicIntro({ scrollYProgress }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
-  // Requirement 2: Check if browser can play VP9 WebM alpha
-  const [canPlayVp9, setCanPlayVp9] = useState(() => {
-    if (typeof document !== 'undefined') {
-      const v = document.createElement('video');
-      const support = v.canPlayType('video/webm; codecs="vp9"');
-      return support === 'probably' || support === 'maybe';
-    }
-    return false;
-  });
-
-  // Connection check for slow mobile fallback
+  // Requirement 3: Skip video ONLY for effectiveType "slow-2g" or "2g"
   const [isSlowConn, setIsSlowConn] = useState(false);
   useEffect(() => {
     if (typeof navigator !== 'undefined' && navigator.connection) {
       const conn = navigator.connection;
-      if (conn.saveData || ['slow-2g', '2g', '3g'].includes(conn.effectiveType)) {
+      if (['slow-2g', '2g'].includes(conn.effectiveType)) {
         setIsSlowConn(true);
       }
     }
   }, []);
 
-  // Video playback readiness & element ref
-  const [isVideoReady, setIsVideoReady] = useState(false);
+  // Requirement 3: Show still cutout ONLY if video element fires a real error event
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
 
-  const shouldPlayVideo = canPlayVp9 && !prefersReducedMotion && !isSlowConn;
+  const shouldPlayVideo = !isSlowConn && !videoError;
 
-  // Auto-play the transparent walking video with try/catch fallback to cutout
+  // Requirement 3: Call video.play() after mount
   useEffect(() => {
     if (shouldPlayVideo && videoRef.current) {
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
-          console.warn('VP9 alpha playback failed, falling back to trimmed cutout:', err);
-          setCanPlayVp9(false);
+          console.warn('Video play() note:', err);
         });
       }
     }
@@ -122,7 +111,7 @@ export default function CinematicIntro({ scrollYProgress }) {
   const [pointerEvents, setPointerEvents] = useState('auto');
   const [isVisible, setIsVisible] = useState(true);
 
-  // Requirement 2: Parallax offsets must start at exactly 0 and only change after the mouse moves.
+  // Requirement 2: Parallax offsets must start at exactly 0 and only change after mouse moves
   const [hasMouseMoved, setHasMouseMoved] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -177,7 +166,7 @@ export default function CinematicIntro({ scrollYProgress }) {
   });
 
   return (
-    // Requirement 2: ONE container: position relative, width 100%, height 100vh, overflow hidden, display grid, place-items center.
+    // One container: position relative, width 100%, height 100vh, overflow hidden, display grid, place-items center
     <div
       style={{
         pointerEvents,
@@ -194,8 +183,7 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* Drifting Warm Amber/Orange Particles */}
       <IntroParticles isMobile={isMobile} />
 
-      {/* Requirement 3: "WELCOME TO MY WORLD": horizontal center at 50% (within 4px), about 12% from the top, above my head.
-          Stacked as absolute child with left:0; right:0; margin-inline:auto; text-align:center. */}
+      {/* "WELCOME TO MY WORLD": horizontal center at 50% (within 4px), about 12% from the top */}
       <motion.div
         id="intro-welcome"
         style={{ opacity: scrollUiOpacity }}
@@ -214,7 +202,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         </p>
       </motion.div>
 
-      {/* Small Corner Labels: Top Left, Bottom Left, Bottom Right */}
+      {/* Corner Labels: Top Left, Bottom Left, Bottom Right */}
       {/* Top Left: ML ENGINEER */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
@@ -255,11 +243,10 @@ export default function CinematicIntro({ scrollYProgress }) {
         </span>
       </motion.div>
 
-      {/* Requirement 3: "RAM": one element, tight letters (letter-spacing -0.02em),
+      {/* "RAM": one element, tight letters (letter-spacing -0.02em),
           bounding box centered horizontally at 50% of viewport width (within 4px),
           about 55% of viewport height tall, with its vertical center at about 55% of viewport height.
-          Fully visible, no cropping at bottom.
-          Stacked as absolute child with left:0; right:0; margin-inline:auto; text-align:center. */}
+          Fully visible, no cropping at bottom. */}
       <motion.div
         id="intro-ram-wrapper"
         style={{
@@ -278,7 +265,7 @@ export default function CinematicIntro({ scrollYProgress }) {
             <div className="w-[70vw] h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
           </div>
 
-          {/* Single "RAM" text element: about 55% viewport height tall, tight letters (-0.02em) */}
+          {/* Base "RAM" text: about 55% viewport height tall, tight letters (-0.02em) */}
           <span
             id="intro-ram"
             className="inline-block font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-none"
@@ -293,15 +280,27 @@ export default function CinematicIntro({ scrollYProgress }) {
             RAM
           </span>
 
-          {/* Light sweep every 4 seconds (1.1s sweep + 2.9s delay) */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { x: '-160%', opacity: 0 }}
+          {/* Requirement 4: Light sweep clipped strictly to letter shapes via background-clip: text.
+              No rectangle is ever visible across M or outside the letters. */}
+          <motion.span
+            aria-hidden="true"
+            className="absolute inset-0 inline-block font-anton uppercase bg-clip-text text-transparent select-none pointer-events-none leading-none"
+            style={{
+              fontFamily: "'Anton', sans-serif",
+              fontSize: '55vh',
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              backgroundImage:
+                'linear-gradient(110deg, transparent 25%, rgba(255, 235, 175, 0.95) 50%, transparent 75%)',
+              backgroundSize: '250% 100%',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+            }}
             animate={
               prefersReducedMotion
                 ? false
                 : {
-                    x: ['-160%', '180%'],
-                    opacity: [0, 0.9, 0.9, 0],
+                    backgroundPosition: ['200% 0', '-100% 0'],
                   }
             }
             transition={{
@@ -310,14 +309,18 @@ export default function CinematicIntro({ scrollYProgress }) {
               repeatDelay: 2.9,
               ease: 'easeInOut',
             }}
-            className="absolute inset-y-0 w-2/5 bg-gradient-to-r from-transparent via-amber-200/85 to-transparent skew-x-[-22deg] pointer-events-none mix-blend-overlay"
-          />
+          >
+            RAM
+          </motion.span>
         </div>
       </motion.div>
 
-      {/* Requirement 3: The walking video: horizontal center at 50% (within 4px),
-          feet at the bottom edge, about 80% of the viewport height, in front of "RAM".
-          Stacked as absolute child with left:0; right:0; margin-inline:auto; text-align:center. */}
+      {/* Requirement 3: The walking video:
+          - Visible from the first frame (no waiting for events)
+          - muted, playsInline, autoPlay, loop
+          - In front of "RAM" (z-20)
+          - Horizontal center at 50% (within 4px), feet at bottom edge, ~80% viewport height
+          - Still cutout shown ONLY if the video fires a real error event */}
       <motion.div
         id="intro-video-wrapper"
         style={{
@@ -329,8 +332,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         }}
         className="absolute bottom-0 left-0 right-0 mx-auto w-fit z-20 flex flex-col items-center justify-end h-[80vh] max-h-[80vh] pointer-events-none"
       >
-        {/* Transparent WebM Video (NO mix-blend-mode, NO mask) */}
-        {shouldPlayVideo && (
+        {shouldPlayVideo ? (
           <video
             ref={videoRef}
             src="/intro-walk-alpha.webm"
@@ -339,31 +341,26 @@ export default function CinematicIntro({ scrollYProgress }) {
             loop
             muted
             playsInline
-            onLoadedData={() => setIsVideoReady(true)}
-            onPlaying={() => setIsVideoReady(true)}
-            className={`h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none transition-opacity duration-300 ${
-              isVideoReady ? 'opacity-100' : 'opacity-0'
-            }`}
+            onError={() => {
+              console.error('Walking video failed to load, falling back to cutout.');
+              setVideoError(true);
+            }}
+            className="h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none"
           />
-        )}
-
-        {/* Fallback image (if VP9 alpha unsupported, while video loads, slow connection, or prefers-reduced-motion) */}
-        {(!shouldPlayVideo || !isVideoReady) && (
+        ) : (
           <img
             src="/me-cutout-trimmed.png"
             alt="Pavan Kalyan Ram Vanama"
             width="310"
             height="894"
-            className={`h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)] ${
-              shouldPlayVideo && isVideoReady ? 'hidden' : 'block'
-            }`}
+            className="h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)]"
             loading="eager"
           />
         )}
       </motion.div>
 
-      {/* Requirement 3: SCROLL indicator must not overlap feet (hide it while walking) */}
-      {(!shouldPlayVideo || !isVideoReady) && (
+      {/* SCROLL indicator (shown only if fallback cutout is active, so it never overlaps walking feet) */}
+      {!shouldPlayVideo && (
         <motion.div
           id="intro-scroll-indicator"
           style={{ opacity: scrollUiOpacity }}
