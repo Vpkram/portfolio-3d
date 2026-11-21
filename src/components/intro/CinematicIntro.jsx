@@ -3,7 +3,7 @@ import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent } 
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import '@fontsource/anton';
 
-// Drifting particles (Requirement: keep intro accents)
+// Drifting warm amber/orange particles
 function IntroParticles({ isMobile }) {
   const canvasRef = useRef(null);
 
@@ -79,6 +79,16 @@ export default function CinematicIntro({ scrollYProgress }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
+  // Requirement 2: Check if browser can play VP9 WebM alpha
+  const [canPlayVp9, setCanPlayVp9] = useState(() => {
+    if (typeof document !== 'undefined') {
+      const v = document.createElement('video');
+      const support = v.canPlayType('video/webm; codecs="vp9"');
+      return support === 'probably' || support === 'maybe';
+    }
+    return false;
+  });
+
   // Connection check for slow mobile fallback
   const [isSlowConn, setIsSlowConn] = useState(false);
   useEffect(() => {
@@ -94,19 +104,25 @@ export default function CinematicIntro({ scrollYProgress }) {
   const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef(null);
 
-  const shouldPlayVideo = !prefersReducedMotion && !isSlowConn;
+  const shouldPlayVideo = canPlayVp9 && !prefersReducedMotion && !isSlowConn;
 
-  // Auto-play the walking video
+  // Auto-play the transparent walking video with try/catch fallback to cutout
   useEffect(() => {
     if (shouldPlayVideo && videoRef.current) {
-      videoRef.current.play().catch(() => {});
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('VP9 alpha playback failed, falling back to trimmed cutout:', err);
+          setCanPlayVp9(false);
+        });
+      }
     }
   }, [shouldPlayVideo]);
 
   const [pointerEvents, setPointerEvents] = useState('auto');
   const [isVisible, setIsVisible] = useState(true);
 
-  // Parallax motion values (desktop) - Cursor parallax on "RAM" only
+  // Parallax motion values (desktop)
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -114,9 +130,14 @@ export default function CinematicIntro({ scrollYProgress }) {
   const smoothMouseX = useSpring(mouseX, springConfig);
   const smoothMouseY = useSpring(mouseY, springConfig);
 
-  // Cursor parallax shifts "RAM" slightly opposite to cursor
-  const wordParallaxX = useTransform(smoothMouseX, [-1, 1], [14, -14]);
-  const wordParallaxY = useTransform(smoothMouseY, [-1, 1], [8, -8]);
+  // Requirement 4: Real motion on "RAM"
+  // Cursor parallax in opposite direction of cursor (up to 25px horizontal, 12px vertical)
+  const wordParallaxX = useTransform(smoothMouseX, [-1, 1], [25, -25]);
+  const wordParallaxY = useTransform(smoothMouseY, [-1, 1], [12, -12]);
+
+  // Requirement 4: Body moves 6px with cursor in opposite direction from letters (to give depth)
+  const bodyParallaxX = useTransform(smoothMouseX, [-1, 1], [-6, 6]);
+  const bodyParallaxY = useTransform(smoothMouseY, [-1, 1], [-3, 3]);
 
   // Mousemove listener for parallax
   useEffect(() => {
@@ -132,24 +153,18 @@ export default function CinematicIntro({ scrollYProgress }) {
   }, [mouseX, mouseY]);
 
   // Scrubbed Scroll Transforms
-  // Background opacity: 1 -> 0 (applied to background backdrop sibling)
+  // Background opacity: 1 -> 0
   const bgOpacity = useTransform(scrollYProgress, [0, 0.75, 1], [1, 0.25, 0]);
 
-  // Video: base scale 1.53 up to 1.53 * 1.35 (~2.06) on scroll, fades out
-  const videoScrollScale = useTransform(scrollYProgress, [0, 1], [1.53, 1.53 * 1.35]);
-  const videoScrollOpacity = useTransform(scrollYProgress, [0, 0.6, 0.9], [1, 0.65, 0]);
+  // Video / Cutout: scales up to about 1.35 and fades out on scroll
+  const scrollCutoutScale = useTransform(scrollYProgress, [0, 1], [1, 1.35]);
+  const scrollCutoutOpacity = useTransform(scrollYProgress, [0, 0.6, 0.9], [1, 0.65, 0]);
 
-  // Fallback cutout scroll transform
-  const fallbackCutoutScale = useTransform(scrollYProgress, [0, 1], [1, 1.35]);
-
-  // "RAM": scale 1 -> 1.45, blur 0 -> 24px, opacity 1 -> 0 on scroll
+  // "RAM": scales up to about 1.45, blurs out to 24px, and fades out on scroll
   const scrollWordScale = useTransform(scrollYProgress, [0, 1], [1, 1.45]);
   const scrollWordBlur = useTransform(scrollYProgress, [0, 0.85], [0, 24]);
   const wordFilter = useTransform(scrollWordBlur, (b) => `blur(${b}px)`);
   const scrollWordOpacity = useTransform(scrollYProgress, [0, 0.65, 0.95], [1, 0.5, 0]);
-
-  // Floor shadow opacity scrub
-  const scrollShadowOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   // Corner labels, "WELCOME TO MY WORLD", and "SCROLL" indicator fade out quickly on scroll
   const scrollUiOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
@@ -161,8 +176,6 @@ export default function CinematicIntro({ scrollYProgress }) {
   });
 
   return (
-    // Bug 2: The parent container has NO opacity < 1, NO transform, NO filter, NO isolation: isolate.
-    // RAM and Video are direct siblings in the SAME stacking context so mix-blend-mode: screen blends seamlessly!
     <div
       style={{
         pointerEvents,
@@ -170,7 +183,7 @@ export default function CinematicIntro({ scrollYProgress }) {
       }}
       className="absolute inset-0 z-10 overflow-hidden select-none"
     >
-      {/* Background backdrop element (sibling, not ancestor) */}
+      {/* Background backdrop element */}
       <motion.div
         style={{ opacity: bgOpacity }}
         className="absolute inset-0 bg-black pointer-events-none -z-10"
@@ -178,6 +191,25 @@ export default function CinematicIntro({ scrollYProgress }) {
 
       {/* Drifting Warm Amber/Orange Particles */}
       <IntroParticles isMobile={isMobile} />
+
+      {/* Requirement 3: "WELCOME TO MY WORLD" at about 14% from top, above my head,
+          bold white with the dots, never overlapping me */}
+      <motion.div
+        style={{ opacity: scrollUiOpacity }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.8, ease: 'easeOut' }}
+        className="absolute top-[14%] left-1/2 -translate-x-1/2 z-30 pointer-events-none text-center px-4"
+      >
+        <p
+          className="font-bold text-white text-[1.1rem] tracking-[0.35em] uppercase flex items-center justify-center gap-3 select-none whitespace-nowrap"
+          style={{ fontWeight: 700, letterSpacing: '0.35em', fontSize: '1.1rem' }}
+        >
+          <span className="opacity-60 text-[0.8em] tracking-[0.25em]">• • •</span>
+          <span>WELCOME TO MY WORLD</span>
+          <span className="opacity-60 text-[0.8em] tracking-[0.25em]">• • •</span>
+        </p>
+      </motion.div>
 
       {/* Small Corner Labels */}
       {/* Top Left: ML ENGINEER */}
@@ -220,7 +252,9 @@ export default function CinematicIntro({ scrollYProgress }) {
         </span>
       </motion.div>
 
-      {/* SIBLING 1: "RAM" container (z-10), sitting directly underneath the video */}
+      {/* Requirement 3 & 4: "RAM" about 55% of viewport height, tight letters, centered at 50% width and about 56% down the screen.
+          Real motion: visible horizontal drift 30px back and forth over 10s, cursor parallax up to 25px/12px opposite cursor,
+          light sweep every 4s, letters never change size (z-10, behind body). */}
       <motion.div
         style={{
           x: wordParallaxX,
@@ -229,53 +263,36 @@ export default function CinematicIntro({ scrollYProgress }) {
           opacity: scrollWordOpacity,
           filter: wordFilter,
         }}
-        className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none px-2"
+        className="absolute top-[56%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none flex items-center justify-center"
       >
-        {/* Bug 4: "WELCOME TO MY WORLD" - bold white line (font-weight 700, letter-spacing 0.35em, about 1.1rem),
-            no orange, three small dots before and after it, centered directly above "RAM" */}
-        <motion.div
-          style={{ opacity: scrollUiOpacity }}
-          className="text-center mb-2 sm:mb-4 select-none pointer-events-none"
-        >
-          <p
-            className="font-bold text-white text-[1.1rem] tracking-[0.35em] uppercase flex items-center justify-center gap-3 select-none"
-            style={{ fontWeight: 700, letterSpacing: '0.35em', fontSize: '1.1rem' }}
-          >
-            <span className="opacity-60 text-[0.8em] tracking-[0.25em]">• • •</span>
-            <span>WELCOME TO MY WORLD</span>
-            <span className="opacity-60 text-[0.8em] tracking-[0.25em]">• • •</span>
-          </p>
-        </motion.div>
-
-        {/* Slow constant motion drift on "RAM" (20px back and forth over 8s, never changes size) */}
+        {/* Horizontal drift of 30px back and forth over 10 seconds */}
         <motion.div
           animate={
             prefersReducedMotion
               ? false
               : {
-                  x: [-20, 20, -20],
+                  x: [-30, 30, -30],
                 }
           }
           transition={{
-            duration: 8,
+            duration: 10,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-          className="relative inline-flex items-center justify-center"
+          className="relative inline-flex items-center justify-center select-none"
         >
           {/* Soft orange radial ambient glow behind RAM */}
           <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
             <div className="w-[85vw] h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
           </div>
 
-          {/* Bug 1: ONE text element containing "RAM", inline-block, centered, letter-spacing -0.02em,
-              no scaleX, no word-spacing. Font size about 70% of viewport height. Three letters nearly touch. */}
+          {/* Single "RAM" text element: about 55% viewport height, tight letters (-0.025em), orange gradient */}
           <span
             className="inline-block font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-[0.82]"
             style={{
               fontFamily: "'Anton', sans-serif",
-              fontSize: 'clamp(8rem, 36vw, 70vh)',
-              letterSpacing: '-0.02em',
+              fontSize: 'clamp(6rem, 28vw, 55vh)',
+              letterSpacing: '-0.025em',
               display: 'inline-block',
             }}
           >
@@ -304,59 +321,54 @@ export default function CinematicIntro({ scrollYProgress }) {
         </motion.div>
       </motion.div>
 
-      {/* SIBLING 2: Video Element (z-20) - Sibling in the SAME stacking context as RAM!
-          mix-blend-mode: screen on the video element itself blends directly with RAM behind it.
-          Bug 3: Scaled so body is ~85% viewport height, feet at bottom edge, head ~12% from top, centered at 50% width.
-          Measured exact transform: translate(-55.7%, 9.8%) scale(1.53) with transform-origin: bottom center. */}
-      {shouldPlayVideo && (
-        <motion.video
-          ref={videoRef}
-          src="/intro-walk.mp4"
-          poster="/me-cutout-trimmed.png"
-          autoPlay
-          loop
-          muted
-          playsInline
-          onLoadedData={() => setIsVideoReady(true)}
-          onPlaying={() => setIsVideoReady(true)}
-          style={{
-            mixBlendMode: 'screen',
-            scale: videoScrollScale,
-            opacity: videoScrollOpacity,
-            x: '-55.7%',
-            y: '9.8%',
-            transformOrigin: 'bottom center',
-            // Feathered soft radial mask on video only to avoid boundary box without darkening RAM
-            maskImage: 'radial-gradient(ellipse 70% 85% at 50% 55%, black 45%, transparent 95%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 70% 85% at 50% 55%, black 45%, transparent 95%)',
-          }}
-          className={`absolute bottom-0 left-1/2 z-20 h-screen w-auto max-w-none object-contain object-bottom pointer-events-none select-none transition-opacity duration-300 ${
-            isVideoReady ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-      )}
+      {/* Requirement 2 & 3: Transparent walking video (intro-walk-alpha.webm), normal opaque-where-visible video,
+          NO mix-blend-mode and NO mask. Solid body in front of RAM (z-20).
+          Layout: body about 72% viewport height, feet at bottom edge, head about 28% from top, centered at 50%.
+          Parallax: moves 6px with cursor in opposite direction from letters. */}
+      <motion.div
+        style={{
+          x: bodyParallaxX,
+          y: bodyParallaxY,
+          scale: scrollCutoutScale,
+          opacity: scrollCutoutOpacity,
+          transformOrigin: 'bottom center',
+        }}
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-end h-[72vh] max-h-[72vh] pointer-events-none"
+      >
+        {/* Transparent WebM Video (NO mix-blend-mode, NO mask) */}
+        {shouldPlayVideo && (
+          <video
+            ref={videoRef}
+            src="/intro-walk-alpha.webm"
+            poster="/me-cutout-trimmed.png"
+            autoPlay
+            loop
+            muted
+            playsInline
+            onLoadedData={() => setIsVideoReady(true)}
+            onPlaying={() => setIsVideoReady(true)}
+            className={`h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none transition-opacity duration-300 ${
+              isVideoReady ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        )}
 
-      {/* Fallback image (while video loads, on slow connections, or prefers-reduced-motion) */}
-      {(!shouldPlayVideo || !isVideoReady) && (
-        <motion.img
-          src="/me-cutout-trimmed.png"
-          alt="Pavan Kalyan Ram Vanama"
-          width="310"
-          height="894"
-          style={{
-            scale: fallbackCutoutScale,
-            opacity: videoScrollOpacity,
-            x: '-52.28%',
-            transformOrigin: 'bottom center',
-          }}
-          className={`absolute bottom-0 left-1/2 z-20 h-[85vh] max-h-[85vh] w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)] ${
-            shouldPlayVideo && isVideoReady ? 'hidden' : 'block'
-          }`}
-          loading="eager"
-        />
-      )}
+        {/* Fallback image (if VP9 alpha unsupported, while video loads, slow connection, or prefers-reduced-motion) */}
+        {(!shouldPlayVideo || !isVideoReady) && (
+          <img
+            src="/me-cutout-trimmed.png"
+            alt="Pavan Kalyan Ram Vanama"
+            width="310"
+            height="894"
+            className={`h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)] ${
+              shouldPlayVideo && isVideoReady ? 'hidden' : 'block'
+            }`}
+            loading="eager"
+          />
+        )}
+      </motion.div>
 
-      {/* SIBLING 3: Animated SCROLL indicator at bottom center (z-30) */}
+      {/* Animated SCROLL indicator at bottom center (z-30) */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0, y: 15 }}
@@ -379,9 +391,6 @@ export default function CinematicIntro({ scrollYProgress }) {
           />
         </motion.div>
       </motion.div>
-
-      {/* Floor blend line */}
-      <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-30" />
     </div>
   );
 }
