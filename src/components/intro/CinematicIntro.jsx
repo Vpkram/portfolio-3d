@@ -3,7 +3,7 @@ import { motion, useMotionValue, useSpring, useTransform, useMotionValueEvent } 
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import '@fontsource/anton';
 
-// Warm amber & orange drifting particles (Requirement 2 & 9)
+// Warm amber & orange drifting particles (Requirement 7 & 9)
 function IntroParticles({ isMobile }) {
   const canvasRef = useRef(null);
 
@@ -18,7 +18,6 @@ function IntroParticles({ isMobile }) {
     let height = (canvas.height = window.innerHeight);
 
     const count = isMobile ? 18 : 45;
-    // Orange and warm amber palette
     const colors = ['#FF8A00', '#FFAE00', '#FF3D00', '#FFD580', '#FF6D00'];
     const particles = Array.from({ length: count }, () => ({
       x: Math.random() * width,
@@ -80,9 +79,8 @@ export default function CinematicIntro({ scrollYProgress }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
-  // Requirement 8: Video hook for public/intro-walk.mp4
+  // Requirement 7: Video hook for public/intro-walk.mp4
   const [hasVideo, setHasVideo] = useState(false);
-  const [isArrived, setIsArrived] = useState(false);
   const [pointerEvents, setPointerEvents] = useState('auto');
   const [isVisible, setIsVisible] = useState(true);
 
@@ -108,12 +106,14 @@ export default function CinematicIntro({ scrollYProgress }) {
   const smoothMouseX = useSpring(mouseX, springConfig);
   const smoothMouseY = useSpring(mouseY, springConfig);
 
-  // Parallax mapping: RAM word shifts slightly opposite to cursor, cutout moves with cursor
-  const wordParallaxX = useTransform(smoothMouseX, [-1, 1], [24, -24]);
-  const wordParallaxY = useTransform(smoothMouseY, [-1, 1], [12, -12]);
+  // Parallax mapping:
+  // Requirement 2: The cursor parallax moves me at most 6px
+  const cutoutParallaxX = useTransform(smoothMouseX, [-1, 1], [-6, 6]);
+  const cutoutParallaxY = useTransform(smoothMouseY, [-1, 1], [-4, 4]);
 
-  const cutoutParallaxX = useTransform(smoothMouseX, [-1, 1], [-14, 14]);
-  const cutoutParallaxY = useTransform(smoothMouseY, [-1, 1], [-8, 8]);
+  // Subtle word parallax
+  const wordParallaxX = useTransform(smoothMouseX, [-1, 1], [10, -10]);
+  const wordParallaxY = useTransform(smoothMouseY, [-1, 1], [6, -6]);
 
   // Mousemove listener for parallax
   useEffect(() => {
@@ -128,27 +128,15 @@ export default function CinematicIntro({ scrollYProgress }) {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [mouseX, mouseY]);
 
-  // Walking transition to idle breathing after ~3.0s
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      setIsArrived(true);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setIsArrived(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [prefersReducedMotion]);
-
   // Scrubbed Scroll Transforms (scrubbed to scroll position over first 100vh)
   // Background opacity: 1 -> 0
   const bgOpacity = useTransform(scrollYProgress, [0, 0.75, 1], [1, 0.25, 0]);
 
-  // Cutout: scales up to about 1.35 and fades out
+  // Cutout: scales up to about 1.35 and fades out on scroll
   const scrollCutoutScale = useTransform(scrollYProgress, [0, 1], [1, 1.35]);
   const scrollCutoutOpacity = useTransform(scrollYProgress, [0, 0.6, 0.9], [1, 0.65, 0]);
 
-  // "RAM": scales up to about 1.45, blurs out to 24px, and fades out
+  // "RAM": scales up to about 1.45, blurs out to 24px, and fades out on scroll
   const scrollWordScale = useTransform(scrollYProgress, [0, 1], [1, 1.45]);
   const scrollWordBlur = useTransform(scrollYProgress, [0, 0.85], [0, 24]);
   const wordFilter = useTransform(scrollWordBlur, (b) => `blur(${b}px)`);
@@ -166,67 +154,7 @@ export default function CinematicIntro({ scrollYProgress }) {
     setIsVisible(v < 0.999);
   });
 
-  // Requirement 4: Walking motion keyframes (3.0s total, ~2 steps/sec = 6 steps)
-  // Bounce: translateY ~6px
-  const walkBounceKeyframes = [0, -6, 0, -6, 0, -6, 0, -6, 0, -6, 0, -6, 0];
-  // Side sway: ~8px
-  const walkSwayKeyframes = [0, 8, 0, -8, 0, 8, 0, -8, 0, 8, 0, -8, 0];
-  // Tiny body tilt: ~1.5 degrees
-  const walkTiltKeyframes = [0, 1.5, 0, -1.5, 0, 1.5, 0, -1.5, 0, 1.5, 0, -1.5, 0];
-
-  // Shadow pulses in sync with footsteps
-  const walkShadowScaleX = [0.75, 0.7, 0.82, 0.75, 0.87, 0.8, 0.92, 0.85, 0.97, 0.9, 1.02, 0.95, 1.0];
-  const walkShadowOpacity = [0.55, 0.45, 0.65, 0.5, 0.7, 0.55, 0.75, 0.6, 0.8, 0.65, 0.85, 0.7, 0.85];
-
-  const walkAnimProps = prefersReducedMotion
-    ? { scale: 1, opacity: 1, y: 0, x: 0, rotate: 0 }
-    : {
-        scale: [0.75, 1.0],
-        opacity: [0.75, 1.0],
-        y: walkBounceKeyframes,
-        x: walkSwayKeyframes,
-        rotate: walkTiltKeyframes,
-        transition: {
-          scale: { duration: 3.0, ease: [0.25, 0.1, 0.25, 1] },
-          opacity: { duration: 3.0, ease: 'linear' },
-          y: { duration: 3.0, ease: 'linear' },
-          x: { duration: 3.0, ease: 'linear' },
-          rotate: { duration: 3.0, ease: 'linear' },
-        },
-      };
-
-  const idleAnimProps = prefersReducedMotion
-    ? { scale: 1, opacity: 1, y: 0, x: 0, rotate: 0 }
-    : {
-        scale: 1,
-        opacity: 1,
-        y: [0, -3.5, 0],
-        x: [0, 2.5, 0, -2.5, 0],
-        rotate: [0, 0.6, 0, -0.6, 0],
-        transition: {
-          y: { duration: 3.6, repeat: Infinity, ease: 'easeInOut' },
-          x: { duration: 6.0, repeat: Infinity, ease: 'easeInOut' },
-          rotate: { duration: 6.0, repeat: Infinity, ease: 'easeInOut' },
-        },
-      };
-
-  const walkShadowProps = prefersReducedMotion
-    ? { scaleX: 1, opacity: 0.85 }
-    : {
-        scaleX: walkShadowScaleX,
-        opacity: walkShadowOpacity,
-        transition: { duration: 3.0, ease: 'linear' },
-      };
-
-  const idleShadowProps = prefersReducedMotion
-    ? { scaleX: 1, opacity: 0.85 }
-    : {
-        scaleX: [1, 1.05, 1],
-        opacity: [0.85, 0.75, 0.85],
-        transition: { duration: 3.6, repeat: Infinity, ease: 'easeInOut' },
-      };
-
-  // Requirement 2: Big word "RAM"
+  // Requirement 4: Letters for RAM
   const letters = ['R', 'A', 'M'];
 
   return (
@@ -241,13 +169,26 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* Drifting Warm Amber/Orange Particles */}
       <IntroParticles isMobile={isMobile} />
 
-      {/* Requirement 5: Small Corner Labels */}
+      {/* Requirement 6: "WELCOME TO MY WORLD" at ~12% from top with z-index above cutout (z-30) */}
+      <motion.div
+        style={{ opacity: scrollUiOpacity }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.8, ease: 'easeOut' }}
+        className="absolute top-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none text-center px-4"
+      >
+        <p className="font-mono text-xs sm:text-sm md:text-base text-[#FFAE00] uppercase tracking-[0.45em] sm:tracking-[0.65em] drop-shadow-[0_0_15px_rgba(255,174,0,0.6)] font-semibold whitespace-nowrap">
+          WELCOME TO MY WORLD
+        </p>
+      </motion.div>
+
+      {/* Requirement 7: Small Corner Labels */}
       {/* Top Left: ML ENGINEER */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.35, duration: 0.6 }}
+        transition={{ delay: 0.45, duration: 0.6 }}
         className="absolute top-6 left-6 sm:top-8 sm:left-8 z-30 pointer-events-none flex items-center gap-2"
       >
         <span className="w-2 h-2 rounded-full bg-[#FF8A00] animate-ping" />
@@ -261,7 +202,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.4, duration: 0.6 }}
+        transition={{ delay: 0.5, duration: 0.6 }}
         className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 z-30 pointer-events-none"
       >
         <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-300/80 uppercase px-3 py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
@@ -274,7 +215,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0, x: 12 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.45, duration: 0.6 }}
+        transition={{ delay: 0.55, duration: 0.6 }}
         className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 pointer-events-none"
       >
         <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-300/80 uppercase px-3 py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
@@ -282,7 +223,8 @@ export default function CinematicIntro({ scrollYProgress }) {
         </span>
       </motion.div>
 
-      {/* Requirement 2 & 5: Big word "RAM" in Anton font + vertical orange gradient BEHIND cutout (z-10) */}
+      {/* Requirement 4 & 5: Big word "RAM" much wider (~85vw), Anton font, orange gradient, ~55vh height,
+          centered on torso behind cutout (z-10), constant motion drift 20px over 8s, light sweep every 4s, never changes size */}
       <motion.div
         style={{
           x: wordParallaxX,
@@ -291,85 +233,100 @@ export default function CinematicIntro({ scrollYProgress }) {
           opacity: scrollWordOpacity,
           filter: wordFilter,
         }}
-        className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none px-2 sm:px-4"
+        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
       >
-        {/* "WELCOME TO MY WORLD" fades in above "RAM" */}
-        <motion.p
-          style={{ opacity: scrollUiOpacity }}
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 10, letterSpacing: '0.35em' }}
-          animate={{ opacity: 1, y: 0, letterSpacing: '0.55em' }}
-          transition={{ delay: 1.3, duration: 0.7, ease: 'easeOut' }}
-          className="font-mono text-xs sm:text-sm md:text-base text-[#FFAE00] uppercase text-center mb-1 sm:mb-2 drop-shadow-[0_0_15px_rgba(255,174,0,0.6)] font-semibold"
+        {/* Horizontal drift of about 20px back and forth over 8 seconds */}
+        <motion.div
+          animate={
+            prefersReducedMotion
+              ? false
+              : {
+                  x: [-20, 20, -20],
+                }
+          }
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="relative flex items-center justify-center w-[85vw] max-w-[85vw] h-[55vh] max-h-[55vh]"
         >
-          WELCOME TO MY WORLD
-        </motion.p>
-
-        {/* Huge RAM: spans nearly full width & ~60% screen height in Anton font */}
-        <div className="relative inline-flex items-center justify-center overflow-hidden max-w-[96vw] max-h-[60vh]">
           {/* Soft orange radial ambient glow behind RAM */}
           <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
             <div className="w-[85vw] h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
           </div>
 
+          {/* Letter container spanning ~85% of viewport width, all letters same size */}
           <div
-            className="flex items-center justify-center font-anton uppercase tracking-tight leading-[0.82] text-[clamp(7.5rem,30vw,60vh)]"
-            style={{ fontFamily: "'Anton', sans-serif" }}
+            className="w-full flex items-center justify-between font-anton uppercase select-none overflow-hidden"
+            style={{
+              fontFamily: "'Anton', sans-serif",
+              fontSize: 'clamp(5.5rem, 25vw, 55vh)',
+              lineHeight: 0.85,
+              transform: 'scaleX(1.15)',
+            }}
           >
             {letters.map((char, i) => (
-              <motion.span
+              <span
                 key={i}
-                initial={
-                  prefersReducedMotion
-                    ? false
-                    : {
-                        scale: 1.4,
-                        filter: 'blur(20px)',
-                        opacity: 0,
-                      }
-                }
-                animate={{
-                  scale: 1,
-                  filter: 'blur(0px)',
-                  opacity: 1,
-                }}
-                transition={{
-                  delay: prefersReducedMotion ? 0 : 0.45 + i * 0.08,
-                  duration: 0.48,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className="inline-block bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_45px_rgba(255,100,0,0.55)]"
+                className="inline-block flex-1 text-center bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)]"
               >
                 {char}
-              </motion.span>
+              </span>
             ))}
-          </div>
 
-          {/* Light sweep glides across the letters */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { x: '-160%', opacity: 0 }}
-            animate={{ x: '180%', opacity: [0, 0.9, 0.9, 0] }}
-            transition={{ delay: 0.85, duration: 0.7, ease: 'easeInOut' }}
-            className="absolute inset-y-0 w-2/5 bg-gradient-to-r from-transparent via-amber-200/85 to-transparent skew-x-[-22deg] pointer-events-none mix-blend-overlay"
-          />
-        </div>
+            {/* Light sweep every 4 seconds (1.1s sweep + 2.9s delay) */}
+            <motion.div
+              initial={prefersReducedMotion ? false : { x: '-160%', opacity: 0 }}
+              animate={
+                prefersReducedMotion
+                  ? false
+                  : {
+                      x: ['-160%', '180%'],
+                      opacity: [0, 0.9, 0.9, 0],
+                    }
+              }
+              transition={{
+                duration: 1.1,
+                repeat: Infinity,
+                repeatDelay: 2.9,
+                ease: 'easeInOut',
+              }}
+              className="absolute inset-y-0 w-2/5 bg-gradient-to-r from-transparent via-amber-200/85 to-transparent skew-x-[-22deg] pointer-events-none mix-blend-overlay"
+            />
+          </div>
+        </motion.div>
       </motion.div>
 
-      {/* Requirement 3, 4, 8: Cutout / Video Centered, Feet at Bottom, 90% Viewport Height (z-20) */}
+      {/* Requirement 2 & 3: Cutout centered on torso (50% viewport width), constant size (80% viewport height),
+          feet at bottom edge, fade in from feet upward, very slow 3px breathing, soft floor shadow (z-20) */}
       <motion.div
         style={{
           x: cutoutParallaxX,
           y: cutoutParallaxY,
         }}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-end h-[90vh] max-h-[90vh] pointer-events-none"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center justify-end h-[80vh] max-h-[80vh] pointer-events-none"
       >
-        {/* Soft elliptical floor shadow under feet pulsing in sync */}
+        {/* Soft elliptical floor shadow under feet */}
         <motion.div
           style={{ opacity: scrollShadowOpacity }}
           className="absolute -bottom-2 left-1/2 -translate-x-1/2 pointer-events-none z-10"
         >
           <motion.div
-            animate={isArrived ? idleShadowProps : walkShadowProps}
-            className="w-48 sm:w-64 h-6 sm:h-8 rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.85)_0%,_rgba(0,0,0,0.4)_45%,_transparent_75%)]"
+            animate={
+              prefersReducedMotion
+                ? false
+                : {
+                    scaleX: [1, 1.03, 1],
+                    opacity: [0.85, 0.75, 0.85],
+                  }
+            }
+            transition={{
+              duration: 4.8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            className="w-48 sm:w-60 h-5 sm:h-7 rounded-full bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.85)_0%,_rgba(0,0,0,0.4)_45%,_transparent_75%)]"
           />
         </motion.div>
 
@@ -382,9 +339,34 @@ export default function CinematicIntro({ scrollYProgress }) {
           }}
           className="h-full flex items-end justify-center z-20"
         >
-          {/* Walking forward (0-3s) -> idle breathing sway wrapper */}
+          {/* Fade in from feet upward at final constant size, with slow 3px breathing motion */}
           <motion.div
-            animate={isArrived ? idleAnimProps : walkAnimProps}
+            initial={
+              prefersReducedMotion
+                ? false
+                : {
+                    clipPath: 'inset(100% 0% 0% 0%)',
+                    opacity: 0,
+                  }
+            }
+            animate={
+              prefersReducedMotion
+                ? { y: 0, opacity: 1, clipPath: 'inset(0% 0% 0% 0%)' }
+                : {
+                    clipPath: 'inset(0% 0% 0% 0%)',
+                    opacity: 1,
+                    y: [0, -3, 0],
+                  }
+            }
+            transition={
+              prefersReducedMotion
+                ? { duration: 0 }
+                : {
+                    clipPath: { duration: 1.0, ease: [0.22, 1, 0.36, 1] },
+                    opacity: { duration: 0.8, ease: 'easeOut' },
+                    y: { duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 1.0 },
+                  }
+            }
             style={{ transformOrigin: 'bottom center' }}
             className="h-full flex items-end justify-center"
           >
@@ -396,14 +378,16 @@ export default function CinematicIntro({ scrollYProgress }) {
                 muted
                 playsInline
                 className="h-full w-auto max-w-[95vw] object-contain object-bottom select-none mix-blend-screen"
+                style={{ transform: 'translateX(-2.28%)' }}
               />
             ) : (
               <img
                 src="/me-cutout-trimmed.png"
                 alt="Pavan Kalyan Ram Vanama"
-                width="123"
-                height="357"
+                width="310"
+                height="894"
                 className="h-full w-auto max-w-[95vw] object-contain object-bottom select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)]"
+                style={{ transform: 'translateX(-2.28%)' }}
                 loading="eager"
               />
             )}
@@ -411,12 +395,12 @@ export default function CinematicIntro({ scrollYProgress }) {
         </motion.div>
       </motion.div>
 
-      {/* Requirement 5: Animated SCROLL indicator at bottom center */}
+      {/* Requirement 7: Animated SCROLL indicator at bottom center */}
       <motion.div
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2.2, duration: 0.6 }}
+        transition={{ delay: 1.2, duration: 0.6 }}
         className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center gap-1.5"
       >
         <span className="font-mono text-[10px] sm:text-xs tracking-[0.3em] text-amber-400/90 font-medium uppercase drop-shadow-[0_0_10px_rgba(255,174,0,0.5)]">
