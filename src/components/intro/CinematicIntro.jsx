@@ -246,7 +246,7 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* "RAM": one element, tight letters (letter-spacing -0.02em),
           bounding box centered horizontally at 50% of viewport width (within 4px),
           responsive font size, about 55% of viewport height tall on desktop.
-          Fully visible, no cropping on mobile or desktop. */}
+          Both base and sweep layers share exact identical positioning and flex-centering. */}
       <motion.div
         id="intro-ram-wrapper"
         style={{
@@ -258,57 +258,60 @@ export default function CinematicIntro({ scrollYProgress }) {
         }}
         className="absolute inset-x-0 top-[26svh] sm:top-[27.5vh] mx-auto w-full max-w-full px-4 text-center z-10 pointer-events-none select-none flex items-center justify-center h-[35svh] sm:h-[45vh] lg:h-[55vh]"
       >
-        <div className="relative inline-flex items-center justify-center select-none h-full max-w-full">
+        <div className="relative w-full h-full flex items-center justify-center select-none">
           {/* Soft orange radial ambient glow behind RAM */}
           <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
-            <div className="w-[70vw] h-[35svh] sm:h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
+            <div className="w-[70vw] h-full bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
           </div>
 
-          {/* Base "RAM" text: responsive font size by viewport width on mobile, 55vh on desktop */}
-          <span
-            id="intro-ram"
-            className="inline-block font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-none text-[34vw] sm:text-[26vw] lg:text-[55vh] tracking-[-0.02em]"
-            style={{
-              fontFamily: "'Anton', sans-serif",
-              lineHeight: 1,
-              letterSpacing: '-0.02em',
-              display: 'inline-block',
-            }}
-          >
-            RAM
-          </span>
+          {/* Base "RAM" text: exact same positioning layer */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+            <span
+              id="intro-ram"
+              className="font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-none text-[34vw] sm:text-[26vw] lg:text-[55vh] tracking-[-0.02em] p-0 m-0"
+              style={{
+                fontFamily: "'Anton', sans-serif",
+                lineHeight: 1,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              RAM
+            </span>
+          </div>
 
-          {/* Requirement 4: Light sweep clipped strictly to letter shapes via background-clip: text.
-              No rectangle is ever visible across M or outside the letters. */}
-          <motion.span
-            aria-hidden="true"
-            className="absolute inset-0 inline-block font-anton uppercase bg-clip-text text-transparent select-none pointer-events-none leading-none text-[34vw] sm:text-[26vw] lg:text-[55vh] tracking-[-0.02em]"
-            style={{
-              fontFamily: "'Anton', sans-serif",
-              lineHeight: 1,
-              letterSpacing: '-0.02em',
-              backgroundImage:
-                'linear-gradient(110deg, transparent 25%, rgba(255, 235, 175, 0.95) 50%, transparent 75%)',
-              backgroundSize: '250% 100%',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-            }}
-            animate={
-              prefersReducedMotion
-                ? false
-                : {
-                    backgroundPosition: ['200% 0', '-100% 0'],
-                  }
-            }
-            transition={{
-              duration: 1.1,
-              repeat: Infinity,
-              repeatDelay: 2.9,
-              ease: 'easeInOut',
-            }}
-          >
-            RAM
-          </motion.span>
+          {/* Light-sweep overlay RAM copy: exact same wrapper and coordinates */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+            <motion.span
+              id="intro-ram-sweep"
+              aria-hidden="true"
+              className="font-anton uppercase bg-clip-text text-transparent select-none pointer-events-none leading-none text-[34vw] sm:text-[26vw] lg:text-[55vh] tracking-[-0.02em] p-0 m-0"
+              style={{
+                fontFamily: "'Anton', sans-serif",
+                lineHeight: 1,
+                letterSpacing: '-0.02em',
+                backgroundImage:
+                  'linear-gradient(110deg, transparent 25%, rgba(255, 235, 175, 0.95) 50%, transparent 75%)',
+                backgroundSize: '250% 100%',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+              }}
+              animate={
+                prefersReducedMotion
+                  ? false
+                  : {
+                      backgroundPosition: ['200% 0', '-100% 0'],
+                    }
+              }
+              transition={{
+                duration: 1.1,
+                repeat: Infinity,
+                repeatDelay: 2.9,
+                ease: 'easeInOut',
+              }}
+            >
+              RAM
+            </motion.span>
+          </div>
         </div>
       </motion.div>
 
@@ -355,7 +358,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         )}
       </motion.div>
 
-      {/* SCROLL indicator (positioned at bottom-4/6 or bottom-24, staying below the feet on mobile) */}
+      {/* SCROLL indicator (positioned at bottom-16 on mobile above the AGENTIC SYSTEMS badge at bottom-4, bottom-24 on desktop) */}
       <motion.button
         id="intro-scroll-indicator"
         type="button"
@@ -367,7 +370,7 @@ export default function CinematicIntro({ scrollYProgress }) {
         initial={prefersReducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.6 }}
-        className="flex absolute bottom-4 sm:bottom-24 right-4 sm:right-8 z-30 flex-col items-center gap-1.5 sm:gap-2 group cursor-pointer bg-transparent border-none p-0 pointer-events-auto"
+        className="flex absolute bottom-16 sm:bottom-24 right-4 sm:right-8 z-30 flex-col items-center gap-1.5 sm:gap-2 group cursor-pointer bg-transparent border-none p-0 pointer-events-auto"
       >
         <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 group-hover:text-orange-400 transition-colors drop-shadow-[0_0_8px_rgba(255,174,0,0.5)]">
           SCROLL
