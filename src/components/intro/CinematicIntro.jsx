@@ -166,13 +166,13 @@ export default function CinematicIntro({ scrollYProgress }) {
   });
 
   return (
-    // One container: position relative, width 100%, height 100vh, overflow hidden, display grid, place-items center
+    // One container: position relative, width 100%, height 100svh, overflow hidden, display grid, place-items center
     <div
       style={{
         pointerEvents,
         display: isVisible ? 'grid' : 'none',
       }}
-      className="relative w-full h-[100vh] overflow-hidden select-none place-items-center z-10"
+      className="relative w-full h-[100svh] overflow-hidden select-none place-items-center z-10"
     >
       {/* Background backdrop element */}
       <motion.div
@@ -183,22 +183,22 @@ export default function CinematicIntro({ scrollYProgress }) {
       {/* Drifting Warm Amber/Orange Particles */}
       <IntroParticles isMobile={isMobile} />
 
-      {/* "WELCOME TO MY WORLD": horizontal center at 50% (within 4px), about 12% from the top */}
+      {/* "WELCOME TO MY WORLD": horizontal center at 50% (within 4px), about 10-12% from the top */}
       <motion.div
         id="intro-welcome"
         style={{ opacity: scrollUiOpacity }}
         initial={prefersReducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.35, duration: 0.8, ease: 'easeOut' }}
-        className="absolute top-[12%] left-0 right-0 mx-auto w-fit text-center z-30 pointer-events-none px-4"
+        className="absolute top-[8%] sm:top-[12%] left-0 right-0 mx-auto w-full max-w-full px-4 text-center z-30 pointer-events-none flex justify-center"
       >
         <p
-          className="font-bold text-white text-[1.1rem] uppercase flex items-center justify-center gap-3 select-none whitespace-nowrap"
-          style={{ fontWeight: 700, letterSpacing: '0.35em', fontSize: '1.1rem' }}
+          className="font-bold text-white uppercase flex items-center justify-center gap-1.5 sm:gap-3 select-none whitespace-nowrap text-[10px] tracking-[0.25em] sm:text-sm lg:text-[1.1rem] lg:tracking-[0.35em]"
+          style={{ fontWeight: 700 }}
         >
-          <span className="opacity-60 text-[0.8em] tracking-[0.25em]">• • •</span>
+          <span className="opacity-60 text-[0.8em] tracking-[0.2em] sm:tracking-[0.25em]">• • •</span>
           <span>WELCOME TO MY WORLD</span>
-          <span className="opacity-60 text-[0.8em] tracking-[0.25em]">• • •</span>
+          <span className="opacity-60 text-[0.8em] tracking-[0.2em] sm:tracking-[0.25em]">• • •</span>
         </p>
       </motion.div>
 
@@ -209,10 +209,10 @@ export default function CinematicIntro({ scrollYProgress }) {
         initial={prefersReducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.45, duration: 0.6 }}
-        className="absolute top-6 left-6 sm:top-8 sm:left-8 z-30 pointer-events-none flex items-center gap-2"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8 z-30 pointer-events-none flex items-center gap-2"
       >
         <span className="w-2 h-2 rounded-full bg-[#FF8A00] animate-ping" />
-        <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-200/90 uppercase px-3 py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
+        <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-200/90 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
           ML ENGINEER
         </span>
       </motion.div>
@@ -223,9 +223,9 @@ export default function CinematicIntro({ scrollYProgress }) {
         initial={prefersReducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.6 }}
-        className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 z-30 pointer-events-none"
+        className="absolute bottom-4 left-4 sm:bottom-8 sm:left-8 z-30 pointer-events-none"
       >
-        <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-300/80 uppercase px-3 py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
+        <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-300/80 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
           GEN AI
         </span>
       </motion.div>
@@ -236,17 +236,17 @@ export default function CinematicIntro({ scrollYProgress }) {
         initial={prefersReducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.55, duration: 0.6 }}
-        className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 pointer-events-none"
+        className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 z-30 pointer-events-none"
       >
-        <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-300/80 uppercase px-3 py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
+        <span className="text-[10px] sm:text-xs font-mono font-medium tracking-widest text-amber-300/80 uppercase px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full glass-card border border-orange-500/30 bg-orange-950/30 shadow-[0_0_15px_rgba(255,110,0,0.2)]">
           AGENTIC SYSTEMS
         </span>
       </motion.div>
 
       {/* "RAM": one element, tight letters (letter-spacing -0.02em),
           bounding box centered horizontally at 50% of viewport width (within 4px),
-          about 55% of viewport height tall, with its vertical center at about 55% of viewport height.
-          Fully visible, no cropping at bottom. */}
+          responsive font size, about 55% of viewport height tall on desktop.
+          Fully visible, no cropping on mobile or desktop. */}
       <motion.div
         id="intro-ram-wrapper"
         style={{
@@ -255,23 +255,21 @@ export default function CinematicIntro({ scrollYProgress }) {
           scale: scrollWordScale,
           opacity: scrollWordOpacity,
           filter: wordFilter,
-          top: '27.5vh',
         }}
-        className="absolute left-0 right-0 mx-auto w-fit text-center z-10 pointer-events-none select-none flex items-center justify-center h-[55vh]"
+        className="absolute inset-x-0 top-[26svh] sm:top-[27.5vh] mx-auto w-full max-w-full px-4 text-center z-10 pointer-events-none select-none flex items-center justify-center h-[35svh] sm:h-[45vh] lg:h-[55vh]"
       >
-        <div className="relative inline-flex items-center justify-center select-none h-full">
+        <div className="relative inline-flex items-center justify-center select-none h-full max-w-full">
           {/* Soft orange radial ambient glow behind RAM */}
           <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
-            <div className="w-[70vw] h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
+            <div className="w-[70vw] h-[35svh] sm:h-[55vh] bg-[radial-gradient(ellipse_at_center,rgba(255,110,0,0.22)_0%,transparent_70%)] blur-2xl" />
           </div>
 
-          {/* Base "RAM" text: about 55% viewport height tall, tight letters (-0.02em) */}
+          {/* Base "RAM" text: responsive font size by viewport width on mobile, 55vh on desktop */}
           <span
             id="intro-ram"
-            className="inline-block font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-none"
+            className="inline-block font-anton uppercase bg-gradient-to-b from-[#FF8A00] to-[#FF3D00] bg-clip-text text-transparent select-none drop-shadow-[0_0_50px_rgba(255,100,0,0.55)] leading-none text-[34vw] sm:text-[26vw] lg:text-[55vh] tracking-[-0.02em]"
             style={{
               fontFamily: "'Anton', sans-serif",
-              fontSize: '55vh',
               lineHeight: 1,
               letterSpacing: '-0.02em',
               display: 'inline-block',
@@ -284,10 +282,9 @@ export default function CinematicIntro({ scrollYProgress }) {
               No rectangle is ever visible across M or outside the letters. */}
           <motion.span
             aria-hidden="true"
-            className="absolute inset-0 inline-block font-anton uppercase bg-clip-text text-transparent select-none pointer-events-none leading-none"
+            className="absolute inset-0 inline-block font-anton uppercase bg-clip-text text-transparent select-none pointer-events-none leading-none text-[34vw] sm:text-[26vw] lg:text-[55vh] tracking-[-0.02em]"
             style={{
               fontFamily: "'Anton', sans-serif",
-              fontSize: '55vh',
               lineHeight: 1,
               letterSpacing: '-0.02em',
               backgroundImage:
@@ -315,12 +312,11 @@ export default function CinematicIntro({ scrollYProgress }) {
         </div>
       </motion.div>
 
-      {/* Requirement 3: The walking video:
-          - Visible from the first frame (no waiting for events)
-          - muted, playsInline, autoPlay, loop
-          - In front of "RAM" (z-20)
-          - Horizontal center at 50% (within 4px), feet at bottom edge, ~80% viewport height
-          - Still cutout shown ONLY if the video fires a real error event */}
+      {/* Requirement 3: The walking video / photo:
+          - Visible from the first frame
+          - Centered horizontally over the RAM text
+          - Sized responsively: h-[52svh] on mobile, h-[80vh] on desktop
+          - Feet stay above the SCROLL button on mobile */}
       <motion.div
         id="intro-video-wrapper"
         style={{
@@ -330,7 +326,7 @@ export default function CinematicIntro({ scrollYProgress }) {
           opacity: scrollCutoutOpacity,
           transformOrigin: 'bottom center',
         }}
-        className="absolute bottom-0 left-0 right-0 mx-auto w-fit z-20 flex flex-col items-center justify-end h-[80vh] max-h-[80vh] pointer-events-none"
+        className="absolute bottom-[16svh] sm:bottom-0 left-0 right-0 mx-auto w-fit z-20 flex flex-col items-center justify-end h-[52svh] sm:h-[65svh] lg:h-[80vh] max-h-[52svh] sm:max-h-[65svh] lg:max-h-[80vh] pointer-events-none"
       >
         {shouldPlayVideo ? (
           <video
@@ -345,7 +341,7 @@ export default function CinematicIntro({ scrollYProgress }) {
               console.error('Walking video failed to load, falling back to cutout.');
               setVideoError(true);
             }}
-            className="h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none"
+            className="h-full w-auto max-w-[85vw] lg:max-w-[95vw] object-contain object-bottom pointer-events-none select-none"
           />
         ) : (
           <img
@@ -353,13 +349,13 @@ export default function CinematicIntro({ scrollYProgress }) {
             alt="Pavan Kalyan Ram Vanama"
             width="310"
             height="894"
-            className="h-full w-auto max-w-[95vw] object-contain object-bottom pointer-events-none select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)]"
+            className="h-full w-auto max-w-[85vw] lg:max-w-[95vw] object-contain object-bottom pointer-events-none select-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.95)]"
             loading="eager"
           />
         )}
       </motion.div>
 
-      {/* SCROLL indicator (positioned at bottom-24 right-6/8 to avoid overlapping feet and badges) */}
+      {/* SCROLL indicator (positioned at bottom-4/6 or bottom-24, staying below the feet on mobile) */}
       <motion.button
         id="intro-scroll-indicator"
         type="button"
@@ -371,16 +367,16 @@ export default function CinematicIntro({ scrollYProgress }) {
         initial={prefersReducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.6 }}
-        className="flex absolute bottom-24 right-6 sm:right-8 z-30 flex-col items-center gap-2 group cursor-pointer bg-transparent border-none p-0 pointer-events-auto"
+        className="flex absolute bottom-4 sm:bottom-24 right-4 sm:right-8 z-30 flex-col items-center gap-1.5 sm:gap-2 group cursor-pointer bg-transparent border-none p-0 pointer-events-auto"
       >
-        <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 group-hover:text-orange-400 transition-colors drop-shadow-[0_0_8px_rgba(255,174,0,0.5)]">
+        <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 group-hover:text-orange-400 transition-colors drop-shadow-[0_0_8px_rgba(255,174,0,0.5)]">
           SCROLL
         </span>
-        <div className="w-5 h-8 rounded-full border-2 border-amber-400 group-hover:border-orange-400 transition-colors flex items-start justify-center pt-1.5 bg-orange-950/20 backdrop-blur-sm shadow-[0_0_12px_rgba(255,110,0,0.3)]">
+        <div className="w-4 h-7 sm:w-5 sm:h-8 rounded-full border-2 border-amber-400 group-hover:border-orange-400 transition-colors flex items-start justify-center pt-1 bg-orange-950/20 backdrop-blur-sm shadow-[0_0_12px_rgba(255,110,0,0.3)]">
           <motion.span
-            animate={{ y: [0, 10, 0] }}
+            animate={{ y: [0, 8, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-orange-400 transition-colors shadow-[0_0_6px_#FF8A00]"
+            className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-amber-400 group-hover:bg-orange-400 transition-colors shadow-[0_0_6px_#FF8A00]"
           />
         </div>
       </motion.button>

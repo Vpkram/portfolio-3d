@@ -54,9 +54,9 @@ export default function App() {
       </motion.div>
 
       <main>
-        {/* Requirement 1 & 6: Scroll-driven First Page (100vh) pinned above existing hero */}
+        {/* Requirement 1 & 6: Scroll-driven First Page pinned above existing hero */}
         <div id="intro-hero-wrapper" ref={introTrackRef} className="relative h-[200vh]">
-          <div className="sticky top-0 h-screen w-full overflow-hidden">
+          <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
             {/* Base Layer: Existing Hero */}
             <div className="absolute inset-0 w-full h-full z-0">
               <Hero />
