@@ -261,7 +261,7 @@ export default function Hero() {
     <section
       id="hero"
       ref={heroRef}
-      className="relative min-h-screen w-full flex items-center overflow-hidden bg-dark-950"
+      className="relative min-h-[100svh] w-full flex items-center overflow-hidden bg-dark-950"
     >
       {/* BACKGROUND CONTAINER */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -308,9 +308,9 @@ export default function Hero() {
         </div>
       )}
 
-      {/* FOREGROUND CONTENT (Mobile-optimized layout for 375px+) */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-14 sm:pt-28 sm:pb-16 lg:py-24">
-        <div className="max-w-xl sm:max-w-2xl lg:max-w-3xl text-left">
+      {/* FOREGROUND CONTENT (Mobile-optimized layout for 360px+) */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 sm:pt-28 sm:pb-16 lg:py-24">
+        <div className="max-w-[90vw] xs:max-w-sm sm:max-w-2xl lg:max-w-3xl text-left">
           
           {/* Status Badge */}
           <motion.div
@@ -357,11 +357,11 @@ export default function Hero() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.24, ease: 'easeOut' }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto"
+            className="flex flex-col xs:flex-row sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto"
           >
             <a
               href="#projects"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl font-display font-semibold text-sm sm:text-base text-dark-950 bg-gradient-to-r from-neon-blue via-neon-cyan to-neon-purple shadow-neon-blue hover:scale-[1.02] active:scale-[0.99] transition-all"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl font-display font-semibold text-sm sm:text-base text-dark-950 bg-gradient-to-r from-neon-blue via-neon-cyan to-neon-purple shadow-neon-blue hover:scale-[1.02] active:scale-[0.99] transition-all"
             >
               <span>View Projects</span>
               <ArrowDownRight className="w-4 h-4" />
@@ -371,7 +371,7 @@ export default function Hero() {
               href="/resume.pdf"
               download="Pavan_Kalyan_Ram_Vanama_Resume.pdf"
               onClick={handleDownloadResume}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl font-display font-semibold text-sm sm:text-base text-white glass-card border border-neon-purple/50 hover:border-neon-blue/70 hover:shadow-neon-purple hover:scale-[1.02] active:scale-[0.99] transition-all group"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl font-display font-semibold text-sm sm:text-base text-white glass-card border border-neon-purple/50 hover:border-neon-blue/70 hover:shadow-neon-purple hover:scale-[1.02] active:scale-[0.99] transition-all group"
             >
               <Download className="w-4 h-4 text-neon-blue group-hover:translate-y-0.5 transition-transform" />
               <span>Download Resume</span>
@@ -383,7 +383,7 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.85, delay: 0.35 }}
-            className="mt-8 sm:mt-10 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-300"
+            className="mt-6 sm:mt-10 flex flex-wrap items-center gap-2 text-xs text-slate-300"
           >
             <a
               href={`mailto:${personal.email}`}
@@ -430,16 +430,22 @@ export default function Hero() {
       </div>
 
       {/* Scroll Down Indicator */}
-      <div className="hidden sm:flex absolute bottom-6 left-8 z-20 items-center gap-3 text-slate-400">
-        <div className="w-4 h-7 rounded-full border border-neon-blue/40 flex items-start justify-center p-1">
+      <button
+        onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
+        aria-label="Scroll to About section"
+        className="flex absolute bottom-24 right-8 z-20 flex-col items-center gap-2 group cursor-pointer bg-transparent border-none p-0"
+      >
+        <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 group-hover:text-orange-400 transition-colors">
+          SCROLL
+        </span>
+        <div className="w-5 h-8 rounded-full border-2 border-amber-400 group-hover:border-orange-400 transition-colors flex items-start justify-center pt-1.5">
           <motion.span
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-1 h-1 rounded-full bg-neon-blue"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-orange-400 transition-colors"
           />
         </div>
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-400">Scroll Down</span>
-      </div>
+      </button>
     </section>
   );
 }

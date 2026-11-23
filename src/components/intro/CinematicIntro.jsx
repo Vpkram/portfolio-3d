@@ -359,32 +359,31 @@ export default function CinematicIntro({ scrollYProgress }) {
         )}
       </motion.div>
 
-      {/* SCROLL indicator (shown only if fallback cutout is active, so it never overlaps walking feet) */}
-      {!shouldPlayVideo && (
-        <motion.div
-          id="intro-scroll-indicator"
-          style={{ opacity: scrollUiOpacity }}
-          initial={prefersReducedMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.6 }}
-          className="absolute bottom-4 left-0 right-0 mx-auto w-fit z-30 pointer-events-none flex flex-col items-center gap-1.5"
-        >
-          <span className="font-mono text-[10px] sm:text-xs tracking-[0.3em] text-amber-400/90 font-medium uppercase drop-shadow-[0_0_10px_rgba(255,174,0,0.5)]">
-            SCROLL
-          </span>
-          <motion.div
-            animate={{ y: [0, 5, 0] }}
+      {/* SCROLL indicator (positioned at bottom-24 right-6/8 to avoid overlapping feet and badges) */}
+      <motion.button
+        id="intro-scroll-indicator"
+        type="button"
+        onClick={() => {
+          document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        aria-label="Scroll to About section"
+        style={{ opacity: scrollUiOpacity }}
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
+        className="flex absolute bottom-24 right-6 sm:right-8 z-30 flex-col items-center gap-2 group cursor-pointer bg-transparent border-none p-0 pointer-events-auto"
+      >
+        <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 group-hover:text-orange-400 transition-colors drop-shadow-[0_0_8px_rgba(255,174,0,0.5)]">
+          SCROLL
+        </span>
+        <div className="w-5 h-8 rounded-full border-2 border-amber-400 group-hover:border-orange-400 transition-colors flex items-start justify-center pt-1.5 bg-orange-950/20 backdrop-blur-sm shadow-[0_0_12px_rgba(255,110,0,0.3)]">
+          <motion.span
+            animate={{ y: [0, 10, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-5 h-8 rounded-full border border-orange-500/50 flex items-start justify-center p-1 bg-orange-950/20 backdrop-blur-sm shadow-[0_0_12px_rgba(255,110,0,0.3)]"
-          >
-            <motion.div
-              animate={{ y: [0, 10, 0], opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-1.5 h-1.5 rounded-full bg-[#FF8A00] shadow-[0_0_6px_#FF8A00]"
-            />
-          </motion.div>
-        </motion.div>
-      )}
+            className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-orange-400 transition-colors shadow-[0_0_6px_#FF8A00]"
+          />
+        </div>
+      </motion.button>
     </div>
   );
 }

@@ -140,7 +140,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="lg:hidden glass-nav border-t border-white/10 mt-3 px-4 pt-3 pb-5 space-y-2">
+        <div className="lg:hidden glass-nav border-t border-white/10 mt-3 px-4 pt-4 pb-6 space-y-1">
           {navLinks.map((link) => {
             const sectionId = link.href.replace('#', '');
             const isActive = activeSection === sectionId;
@@ -150,7 +150,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
                   isActive
                     ? 'text-neon-blue bg-neon-blue/15 border border-neon-blue/30 font-semibold'
                     : 'text-slate-200 hover:text-neon-blue hover:bg-white/5'
@@ -164,7 +164,7 @@ export default function Navbar() {
             href="/resume.pdf"
             download="Pavan_Kalyan_Ram_Vanama_Resume.pdf"
             onClick={handleDownloadResume}
-            className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider text-dark-950 bg-gradient-to-r from-neon-blue to-neon-purple cursor-pointer shadow-neon-blue"
+            className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider text-dark-950 bg-gradient-to-r from-neon-blue to-neon-purple cursor-pointer shadow-neon-blue min-h-[44px]"
           >
             <Download className="w-4 h-4" />
             Download Resume

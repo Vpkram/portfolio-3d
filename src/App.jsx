@@ -39,7 +39,7 @@ export default function App() {
   });
 
   return (
-    <div className="relative min-h-screen bg-dark-950 text-slate-100 selection:bg-neon-blue/30 selection:text-neon-blue">
+    <div className="relative min-h-[100svh] w-full overflow-x-clip bg-dark-950 text-slate-100 selection:bg-neon-blue/30 selection:text-neon-blue">
       <CursorGlow />
 
       {/* Navbar & Resume Button: hidden at very top, fades in past 30% of intro */}

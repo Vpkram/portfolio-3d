@@ -9,7 +9,7 @@ export default function Education() {
   const { education } = portfolioData;
 
   return (
-    <section id="education" className="relative py-24 sm:py-32 bg-dark-950 scroll-mt-24">
+    <section id="education" className="relative py-16 sm:py-24 lg:py-32 bg-dark-950 scroll-mt-24">
       {/* Background Ambient Glow */}
       <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-neon-blue/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -33,7 +33,7 @@ export default function Education() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
                 transition={{ duration: 0.55, delay: idx * 0.12 }}
-                className={`glass-card rounded-2xl p-7 sm:p-8 border transition-all duration-300 relative overflow-hidden ${
+                className={`glass-card rounded-2xl p-5 sm:p-7 lg:p-8 border transition-all duration-300 relative overflow-hidden ${
                   isLatest
                     ? 'border-neon-blue/40 shadow-neon-blue'
                     : 'border-white/10 hover:border-white/20'
@@ -57,7 +57,7 @@ export default function Education() {
 
                     <div>
                       <div className="flex items-center gap-2.5 flex-wrap">
-                        <h3 className="font-display font-bold text-xl sm:text-2xl text-white">
+                        <h3 className="font-display font-bold text-lg sm:text-xl lg:text-2xl text-white">
                           {item.degree}
                         </h3>
                         {isLatest && (

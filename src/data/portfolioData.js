@@ -16,12 +16,17 @@ export const portfolioData = {
 
   about: {
     summary:
-      'Computer Science & Engineering (B.Tech) undergraduate at Annamacharya University (CGPA 9.28/10.00) with hands-on experience in Generative AI, Agentic AI system design, and Machine Learning.',
+      'I am a Computer Science and Engineering undergraduate at Annamacharya University with a strong interest in Artificial Intelligence, Generative AI, and Machine Learning.',
+    summary2:
+      'I enjoy transforming ideas into practical AI applications through Python, LLMs, machine learning algorithms, and intelligent automation.',
+    highlightsHeading: "What I've Been Working On",
     highlights: [
-      'Built an Autonomous Code Review & Bug Fix Agent powered by Groq API, LLaMA 3.3-70b, and Genetic Algorithms across 3 generations.',
-      'Engineered end-to-end Machine Learning and NLP pipelines for Credit Card Fraud Detection (284,807 transactions) and Spam Mail Prediction.',
-      'Active volunteer with We Are With You Charitable Trust, mentoring students in goal setting, confidence building, and community initiatives.',
+      'Developed an Autonomous Code Review and Bug Fix Agent using Groq API and Llama 3.3 70B.',
+      'Built Machine Learning and NLP pipelines for Credit Card Fraud Detection and Spam Mail Prediction.',
+      'Explored Genetic Algorithms and multi-generation optimization techniques.',
+      'Actively contribute to community initiatives through volunteering, mentoring, and knowledge sharing.',
     ],
+    goal: 'My Goal: To build intelligent, scalable AI solutions that solve real-world problems.',
   },
 
   skills: [
